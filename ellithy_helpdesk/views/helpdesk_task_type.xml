@@ -1,0 +1,79 @@
+<odoo>
+    <data>
+        <record id="view_helpdesk_task_type_form" model="ir.ui.view">
+            <field name="name">helpdesk.task.type.form</field>
+            <field name="model">helpdesk.task.type</field>
+            <field name="arch" type="xml">
+                <form string="Team Task Configuration">
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Task Name"/>
+                            <h1>
+                                <field name="name" placeholder="e.g. PC Formatting"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="team_id" options="{'no_create': True, 'no_open': False}"/>
+                                <field name="responsible_id"
+                                       options="{'no_create': True}"
+                                       domain="[('id', 'in', member_ids)]"/>
+                                <field name="equipment_id"/>
+                            </group>
+                            <group>
+                                <field name="duration_hours" widget="float_time" string="SLA Duration"/>
+                            </group>
+                        </group>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_task_type_tree" model="ir.ui.view">
+            <field name="name">helpdesk.task.type.list</field>
+            <field name="model">helpdesk.task.type</field>
+            <field name="arch" type="xml">
+                <list string="Team Tasks">
+                    <field name="name"/>
+                    <field name="team_id"/>
+                    <field name="duration_hours" widget="float_time"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_task_type_search" model="ir.ui.view">
+            <field name="name">helpdesk.task.type.search</field>
+            <field name="model">helpdesk.task.type</field>
+            <field name="arch" type="xml">
+                <search string="Search Tasks">
+                    <field name="name"/>
+                    <field name="team_id"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Team" name="group_by_team" context="{'group_by': 'team_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_task_type" model="ir.actions.act_window">
+            <field name="name">Team Tasks</field>
+            <field name="res_model">helpdesk.task.type</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first team task!
+                </p>
+                <p>
+                    Define tasks for each Helpdesk Team and set their expected resolution time (SLA).
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_helpdesk_task_type"
+                  name="Team Tasks"
+                  parent="helpdesk.helpdesk_menu_config"
+                  action="action_helpdesk_task_type"
+                  sequence="20"/>
+    </data>
+</odoo>

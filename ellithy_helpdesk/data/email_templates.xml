@@ -1,0 +1,358 @@
+<odoo>
+    <data>
+        <record id="email_template_ticket_created_dept" model="mail.template">
+            <field name="name">Ticket Created: Team Manager Notification</field>
+            <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+            <field name="subject">New Ticket: {{ object.name }}</field>
+            <field name="email_to">{{ ctx.get('email_to_all')}}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px;">
+                    <h2 style="color: #714B67;">New Ticket Alert</h2>
+                    <p>Hello
+                        <strong>
+                            <t t-out="object.team_id.name"/>
+                            Team
+                        </strong>
+                        ,
+                    </p>
+                    <p>A new ticket has been created and requires your attention:</p>
+
+                    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <p style="margin: 5px 0;">
+                            <strong>Ticket:</strong>
+                            <t t-out="object.name"/>
+                        </p>
+                        <p style="margin: 5px 0;">
+                            <strong>Priority:</strong>
+                            <t t-out="dict(object._fields['priority'].selection).get(object.priority) or object.priority"/>
+                        </p>
+                    </div>
+
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a t-att-href="object.get_portal_url()"
+                           style="background-color: #714B67; padding: 12px 25px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            View Ticket
+                        </a>
+                    </div>
+
+                    <p>Please assign it to a team member as soon as possible.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin-top: 20px;"/>
+                    <p style="font-size: 12px; color: #999;">Best regards,<br/>Helpdesk System
+                    </p>
+                </div>
+            </field>
+        </record>
+
+
+        <record id="email_template_reminder_80" model="mail.template">
+            <field name="name">Ticket Reminder: 80% Time Passed</field>
+            <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+            <field name="subject">Urgent: Ticket {{ object.name }} reached 80% of SLA</field>
+            <field name="email_to">{{ ctx.get('team_emails_all') }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ffcccb; padding: 20px; border-radius: 8px;">
+                    <h2 style="color: #d9534f;">⚠️ SLA Warning: 80% Time Passed</h2>
+
+                    <p>Hello Team,</p>
+                    <p>This is an urgent reminder that only <strong>20%</strong> of the allocated time remains for the
+                        following ticket:
+                    </p>
+
+                    <div style="background-color: #fff5f5; padding: 15px; border-left: 5px solid #d9534f; margin: 20px 0;">
+                        <p style="margin: 5px 0;">
+                            <strong>Ticket:</strong>
+                            <t t-out="object.name"/>
+                        </p>
+                        <p style="margin: 5px 0; color: #d9534f;">
+                            <strong>Remaining Time:</strong>
+                            <t t-out="ctx.get('remaining_hours')"/>
+                            Hours
+                        </p>
+                        <p style="margin: 5px 0;">
+                            <strong>Priority:</strong>
+                            <t t-out="dict(object._fields['priority'].selection).get(object.priority) or object.priority"/>
+                        </p>
+                    </div>
+
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a t-att-href="object.get_portal_url()"
+                           style="background-color: #d9534f; padding: 12px 25px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            View Ticket Details
+                        </a>
+                    </div>
+
+                    <p>Please take action immediately to avoid SLA breach.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin-top: 20px;"/>
+                    <p style="font-size: 11px; color: #999;">Automated SLA Monitor System</p>
+                </div>
+            </field>
+        </record>
+
+
+        <record id="email_template_ticket_solved" model="mail.template">
+            <field name="name">Helpdesk: Ticket Solved</field>
+            <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+            <field name="subject">Ticket Solved: {{ object.name }}</field>
+            <field name="email_to">{{ object.create_uid.email }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e1e1e1; padding: 20px; border-radius: 10px;">
+                    <div style="text-align: center;">
+                        <h2 style="color: #28a745; margin-bottom: 10px;">✅ Success! Ticket Solved</h2>
+                        <p style="font-size: 16px; color: #555;">Hello
+                            <strong>
+                                <t t-out="object.create_uid.name"/>
+                            </strong>
+                            ,
+                        </p>
+                    </div>
+
+                    <div style="background-color: #f4faf6; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; border: 1px solid #d4edda;">
+                        <p style="margin: 0; font-size: 15px;">Your ticket
+                            <strong>"<t t-out="object.name"/>"
+                            </strong>
+                            has been marked as <strong>Solved</strong>.
+                        </p>
+                    </div>
+
+                    <p style="text-align: center; color: #666;">You can review the solution or provide feedback by
+                        clicking the button below:
+                    </p>
+
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a t-att-href="object.get_portal_url()"
+                           style="background-color: #28a745; padding: 12px 30px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            View Ticket &amp; Feedback
+                        </a>
+                    </div>
+
+                    <p style="text-align: center; font-size: 14px; color: #888;">Thank you for your patience and for
+                        choosing our support.
+                    </p>
+
+                    <hr style="border: none; border-top: 1px solid #eee; margin-top: 25px;"/>
+                    <p style="font-size: 11px; color: #bbb; text-align: center;">Helpdesk Support Team</p>
+                </div>
+            </field>
+        </record>
+
+        <record id="email_template_ticket_cancelled" model="mail.template">
+            <field name="name">Helpdesk: Ticket Cancelled</field>
+            <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+            <field name="subject">Ticket Cancelled: {{ object.name }}</field>
+            <field name="email_to">{{ object.create_uid.email }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+                    <div style="text-align: center;">
+                        <h2 style="color: #6c757d; margin-bottom: 10px;">🚫 Ticket Cancelled</h2>
+                        <p style="font-size: 16px; color: #555;">Hello
+                            <strong>
+                                <t t-out="object.create_uid.name"/>
+                            </strong>
+                            ,
+                        </p>
+                    </div>
+
+                    <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; border: 1px solid #dee2e6;">
+                        <p style="margin: 0; font-size: 15px;">Your ticket
+                            <strong>"<t t-out="object.name"/>"
+                            </strong>
+                            has been <strong>Cancelled</strong>.
+                        </p>
+                    </div>
+
+                    <p style="text-align: center; color: #666;">If you believe this was done in error, please contact
+                        your team manager.
+                    </p>
+
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a t-att-href="object.get_portal_url()"
+                           style="background-color: #6c757d; padding: 12px 30px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            View Ticket Details
+                        </a>
+                    </div>
+
+                    <hr style="border: none; border-top: 1px solid #eee; margin-top: 25px;"/>
+                    <p style="font-size: 11px; color: #bbb; text-align: center;">Helpdesk Support Team</p>
+                </div>
+            </field>
+        </record>
+
+
+        <record id="email_template_overdue_hr" model="mail.template">
+            <field name="name">Helpdesk: Overdue Alert to HR (Final Escalation)</field>
+            <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+            <field name="subject">🔴 CRITICAL: SLA Breach - Ticket {{ object.name }} passed all Escalation Levels</field>
+            <field name="email_to">{{ ctx.get('hr_email') }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 2px solid #b91c1c; padding: 20px; border-radius: 8px;">
+                    <div style="text-align: center; border-bottom: 2px solid #fecaca; padding-bottom: 15px; margin-bottom: 20px;">
+                        <h2 style="color: #b91c1c; margin: 0; text-transform: uppercase;">Final SLA Violation Alert</h2>
+                        <p style="color: #7f1d1d; font-weight: bold; margin-top: 5px;">Status: Unresolved after Leader
+                            &amp; Manager Review
+                        </p>
+                    </div>
+
+                    <p>Hello HR Team,</p>
+                    <p>This is a <strong>final notification</strong> regarding a ticket that has failed to be resolved
+                        within its SLA, despite being escalated through all leadership levels:
+                    </p>
+
+                    <div style="background-color: #fef2f2; padding: 15px; border-radius: 5px; border: 1px solid #fee2e2;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 5px 0; color: #7f1d1d; width: 35%;">
+                                    <strong>Ticket Subject:</strong>
+                                </td>
+                                <td style="padding: 5px 0;">
+                                    <t t-out="object.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #7f1d1d;">
+                                    <strong>Current Stage:</strong>
+                                </td>
+                                <td style="padding: 5px 0;">
+                                    <span style="color: #b91c1c; font-weight: bold;">
+                                        <t t-out="object.stage_id.name"/>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #7f1d1d;">
+                                    <strong>Final Handler (Manager):</strong>
+                                </td>
+                                <td style="padding: 5px 0;">
+                                    <t t-out="object.user_id.name or 'Not Assigned'"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #7f1d1d;">
+                                    <strong>Initial Expected Duration:</strong>
+                                </td>
+                                <td style="padding: 5px 0;">
+                                    <t t-out="object.expected_duration"/>
+                                    Hours
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #7f1d1d;">
+                                    <strong>Team:</strong>
+                                </td>
+                                <td style="padding: 5px 0;">
+                                    <t t-out="object.team_id.name"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a t-att-href="object.get_portal_url()"
+                           style="background-color: #b91c1c; padding: 12px 25px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            Review Escalation History
+                        </a>
+                    </div>
+
+                    <div style="font-size: 12px; color: #991b1b; background: #fee2e2; padding: 12px; border-radius: 4px; border-left: 4px solid #b91c1c;">
+                        <strong>Note:</strong>
+                        This ticket has already spent its full duration with the assigned agent, plus an additional 50%
+                        with the Team Leader, and 50% with the Team Manager. Immediate HR intervention is recommended.
+                    </div>
+
+                    <p style="font-size: 11px; color: #666; margin-top: 20px;">Best regards,<br/>Helpdesk Monitoring
+                        System
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <!-- Team Leader -->
+        <record id="email_template_escalation_leader" model="mail.template">
+            <field name="name">Helpdesk: Escalation to Leader</field>
+            <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+            <field name="subject">🚨 Action Required: Ticket Escalated to You (Level 1)</field>
+            <field name="email_to">{{ object.user_id.email }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 2px solid #714B67; border-radius: 8px;">
+                    <h2 style="color: #714B67;">Escalation Alert: First Reopen</h2>
+                    <p>Hello
+                        <strong>
+                            <t t-out="object.user_id.name"/>
+                        </strong>
+                        ,
+                    </p>
+                    <p>The following ticket has exceeded its initial SLA and has been <strong>automatically assigned to
+                        you
+                    </strong> as the Team Leader:
+                    </p>
+                    <div style="background-color: #f3f3f3; padding: 15px; margin: 15px 0;">
+                        <strong>Ticket:</strong>
+                        <t t-out="object.name"/>
+                        <br/>
+                        <strong>Original Duration:</strong>
+                        <t t-out="object.expected_duration"/>
+                        Hours
+                        <br/>
+                        <strong>Status:</strong>
+                        First Reopen
+                    </div>
+                    <p>You have an additional <strong>50% time</strong> to resolve this issue before further escalation.
+                    </p>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a t-att-href="object.get_portal_url()"
+                           style="background-color: #714B67; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            View Ticket
+                        </a>
+                    </div>
+                </div>
+            </field>
+        </record>
+
+        <record id="email_template_escalation_manager" model="mail.template">
+            <field name="name">Helpdesk: Escalation to Manager</field>
+            <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+            <field name="subject">🚨 CRITICAL: Ticket Escalated to Manager (Level 2)</field>
+            <field name="email_to">{{ object.user_id.email }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 2px solid #b91c1c; border-radius: 8px;">
+                    <h2 style="color: #b91c1c;">Critical Escalation: Second Reopen</h2>
+                    <p>Hello
+                        <strong>
+                            <t t-out="object.user_id.name"/>
+                        </strong>
+                        ,
+                    </p>
+                    <p>This ticket has not been resolved by the agent or the team leader. It is now <strong>your
+                        responsibility
+                    </strong> as the Manager:
+                    </p>
+                    <div style="background-color: #fef2f2; padding: 15px; margin: 15px 0; border-left: 5px solid #b91c1c;">
+                        <strong>Ticket:</strong>
+                        <t t-out="object.name"/>
+                        <br/>
+                        <strong>Status:</strong>
+                        Second Reopen (Final Stage)
+                    </div>
+                    <p style="color: #b91c1c;">Failure to resolve this within the next 50% of time will trigger
+                        a <strong>Final Alert to HR</strong>.
+                    </p>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a t-att-href="object.get_portal_url()"
+                           style="background-color: #b91c1c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            Handle Immediately
+                        </a>
+                    </div>
+                </div>
+            </field>
+        </record>
+
+        <record id="ir_cron_helpdesk_sla_checker" model="ir.cron">
+            <field name="name">Helpdesk: SLA 80% and HR Alert</field>
+            <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+            <field name="state">code</field>
+            <field name="code">model.action_ticket_sla_cron()</field>
+            <field name="interval_number">15</field>
+            <field name="interval_type">minutes</field>
+        </record>
+
+    </data>
+</odoo>

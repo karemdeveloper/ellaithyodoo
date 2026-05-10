@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_helpdesk_task_type_user,helpdesk.task.type.user,model_helpdesk_task_type,,1,1,1,1
+access_helpdesk_helpdesk_task_equipment,helpdesk.task.equipment,model_helpdesk_task_equipment,,1,1,1,1
