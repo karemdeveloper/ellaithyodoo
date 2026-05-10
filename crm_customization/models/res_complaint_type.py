@@ -13,3 +13,4 @@ class ResComplaintType(models.Model):
                                         domain="[('model', '=', 'res.complaint')]",
                                         help='Email template to use when sending complaint notifications')
 
+    active = fields.Boolean(default=True)
