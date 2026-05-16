@@ -43,7 +43,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='fold']" position="after">
                 <!--                <field name="is_hold_stage"/>-->
-                <field name="is_default_return_stage"/>
+<!--                <field name="is_default_return_stage"/>-->
                 <field name="is_escalation_stage"/>
                 <field name="escalation_level" invisible="not is_escalation_stage"/>
 

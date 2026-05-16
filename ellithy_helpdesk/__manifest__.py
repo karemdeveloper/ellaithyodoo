@@ -6,6 +6,7 @@
     'depends': ['helpdesk', 'mail'],
     'data': [
         'security/ir.model.access.csv',
+        'security/security.xml',
         'data/email_templates.xml',
         'views/helpdesk_task_type.xml',
         'views/helpdesk_views.xml'

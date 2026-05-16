@@ -1,4 +1,5 @@
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 from datetime import timedelta
 import re
 import logging
@@ -174,6 +175,12 @@ class HelpdeskTicket(models.Model):
         return tickets
 
     def write(self, vals):
+        protected_fields = ['team_id', 'task_type_id', 'user_id','priority','tag_ids','partner_id','partner_phone','email_cc','notes']
+
+        if not self.env.user.has_group('helpdesk.group_helpdesk_manager'):
+            if any(field in vals for field in protected_fields):
+                raise UserError(
+                    "Sorry, you cannot modify the ticket after it has been created. Please contact the System Administrator.")
         if 'user_id' in vals and vals['user_id']:
             _logger.info(">>> [Write] Assigning User ID %s to Tickets: %s", vals['user_id'], self.ids)
             template = self.env.ref('ellithy_helpdesk.email_template_ticket_assigned_member', raise_if_not_found=False)
