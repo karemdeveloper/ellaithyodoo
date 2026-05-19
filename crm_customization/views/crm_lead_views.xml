@@ -236,6 +236,9 @@
                 <field name="call_type" string="Call Type" placeholder="Call Type"
                        options="{'no_create': True, 'no_edit': True}" required="1"/>
             </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+            <attribute name="options">{'no_quick_create': True}</attribute>
+        </xpath>
         </field>
     </record>
     <record id="view_crm_lead_list_inherit" model="ir.ui.view">
