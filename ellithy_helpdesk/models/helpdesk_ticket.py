@@ -175,12 +175,20 @@ class HelpdeskTicket(models.Model):
         return tickets
 
     def write(self, vals):
-        protected_fields = ['team_id', 'task_type_id', 'user_id','priority','tag_ids','partner_id','partner_phone','email_cc','notes']
+        protected_fields = ['team_id', 'task_type_id', 'user_id', 'priority', 'tag_ids', 'partner_id', 'partner_phone',
+                            'email_cc', 'notes']
 
+        # --- التعديل: منع نقل أو تعديل التذكرة إذا كانت حالياً في مرحلة الـ Overdue ---
+        if not self.env.user.has_group('helpdesk.group_helpdesk_manager'):
+            for ticket in self:
+                if ticket.stage_id.escalation_level == 'overdue':
+                    raise UserError("Sorry, you cannot modify or move the ticket from the Overdue stage after it has been escalated to HR.")
+        # التحقق من الحقول المحمية للمستخدمين العاديين بعد التعديل الجديد
         if not self.env.user.has_group('helpdesk.group_helpdesk_manager'):
             if any(field in vals for field in protected_fields):
                 raise UserError(
                     "Sorry, you cannot modify the ticket after it has been created. Please contact the System Administrator.")
+
         if 'user_id' in vals and vals['user_id']:
             _logger.info(">>> [Write] Assigning User ID %s to Tickets: %s", vals['user_id'], self.ids)
             template = self.env.ref('ellithy_helpdesk.email_template_ticket_assigned_member', raise_if_not_found=False)
@@ -267,7 +275,6 @@ class HelpdeskTicket(models.Model):
 
             effective_time = (now - ticket.create_date).total_seconds() / 3600
 
-
             if current_esc_level == 'none':
                 if not ticket.reminder_80_sent and effective_time >= (original_duration * 0.8):
                     self._send_sla_reminder_80(ticket, effective_time)
@@ -317,8 +324,25 @@ class HelpdeskTicket(models.Model):
                         template = self.env.ref('ellithy_helpdesk.email_template_overdue_hr', raise_if_not_found=False)
                         if template:
                             template.sudo().with_context(hr_email=hr_emails_list).send_mail(ticket.id, force_send=True)
-                            ticket.overdue_hr_sent = True
-                            _logger.info(">>> FINAL SLA BREACH: HR Alert sent for %s", ticket.name)
+
+                            # --- التعديل هنا لترحيل التذكرة لمرحلة الـ Overdue ---
+                            target_stage = all_escalation_stages.filtered(
+                                lambda s: s.escalation_level == 'overdue' and ticket.team_id in s.team_ids
+                            )[:1]
+
+                            write_vals = {
+                                'overdue_hr_sent': True,
+                                'date_last_escalation': now
+                            }
+
+                            if target_stage:
+                                write_vals['stage_id'] = target_stage.id
+
+                            ticket.write(write_vals)
+                            # ----------------------------------------------------
+
+                            _logger.info(">>> FINAL SLA BREACH: HR Alert sent and ticket moved to Overdue for %s",
+                                         ticket.name)
 
         _logger.info(">>> [Cron SLA] Job Completed.")
         return True

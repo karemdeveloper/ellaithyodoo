@@ -74,7 +74,8 @@ class HelpdeskStage(models.Model):
     escalation_level = fields.Selection([
         ('none', 'None'),
         ('leader', 'Team Leader'),
-        ('manager', 'Manager')
+        ('manager', 'Manager'),
+        ('overdue', 'Overdue')
     ], default='none')
     # is_default_return_stage = fields.Boolean(
     #     string="Is Default Return Stage",
