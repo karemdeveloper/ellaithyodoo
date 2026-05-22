@@ -30,10 +30,12 @@ class APIToken(models.Model):
         if token:
             return token.token
             
-        # Create new token
+        # Remove any expired token for this user before creating a new one
+        self.search([("user_id", "=", user_id)]).unlink()
+
         expiration = token_expiration()
         token_value = generate_token()
-        
+
         self.create({
             "token": token_value,
             "user_id": user_id,

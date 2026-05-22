@@ -30,7 +30,7 @@ class ApiToken(models.Model):
         self.search([('user_id', '=', user_id)]).unlink()
 
         new_token = hashlib.sha256(os.urandom(40)).hexdigest()
-        expiration = datetime.now() + timedelta(hours=24)
+        expiration = datetime.now() + timedelta(days=30)
 
         self.create({
             'token': new_token,
