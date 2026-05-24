@@ -1,0 +1,911 @@
+{
+  "info": {
+    "name": "IBS API Integration",
+    "_postman_id": "ibs-api-integration-v1",
+    "description": "Complete test collection for the IBS API Integration Odoo module.\n\n**Setup**\n1. Set the `base_url` collection variable to your Odoo server (e.g. `http://localhost:8069`).\n2. Set `db`, `odoo_username`, and `odoo_password` collection variables.\n3. Run **Authentication / Get Token** — it saves the token automatically.\n4. Run any other request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",       "value": "http://localhost:8069", "type": "string" },
+    { "key": "db",             "value": "odoo",                  "type": "string" },
+    { "key": "odoo_username",  "value": "admin",                 "type": "string" },
+    { "key": "odoo_password",  "value": "admin",                 "type": "string" },
+    { "key": "access_token",   "value": "",                      "type": "string" },
+    { "key": "order_id",       "value": "1",                     "type": "string" },
+    { "key": "partner_id",     "value": "1",                     "type": "string" },
+    { "key": "product_id",     "value": "1",                     "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response has access_token', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(true);",
+                  "    pm.expect(body.data.access_token).to.be.a('string').and.not.empty;",
+                  "    pm.collectionVariables.set('access_token', body.data.access_token);",
+                  "});",
+                  "pm.test('Response has uid and company_id', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.data.uid).to.be.a('number');",
+                  "    pm.expect(body.data.company_id).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "db",       "value": "{{db}}" },
+              { "key": "username", "value": "{{odoo_username}}" },
+              { "key": "password", "value": "{{odoo_password}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/v1/auth/token", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "token"] }
+          }
+        },
+        {
+          "name": "Revoke Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Token revoked', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(true);",
+                  "    pm.expect(body.data.revoked).to.eql(true);",
+                  "    pm.collectionVariables.set('access_token', '');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/token?access_token={{access_token}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "token"],
+              "query": [{ "key": "access_token", "value": "{{access_token}}" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sale Orders (sale.order)",
+      "item": [
+        {
+          "name": "01 — Get All Orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is success', function () {",
+                  "    pm.expect(pm.response.json().status).to.eql(true);",
+                  "});",
+                  "pm.test('Data is an array', function () {",
+                  "    pm.expect(pm.response.json().data).to.be.an('array');",
+                  "});",
+                  "pm.test('Pagination object present', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.pagination).to.exist;",
+                  "    pm.expect(body.pagination.total_count).to.be.a('number');",
+                  "    pm.expect(body.pagination.num_pages).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order?page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order"],
+              "query": [
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 — Get Orders with Pagination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Correct page returned', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.pagination.current_page).to.eql(2);",
+                  "    pm.expect(body.pagination.page_size).to.eql(5);",
+                  "});",
+                  "pm.test('next/previous URLs present', function () {",
+                  "    var p = pm.response.json().pagination;",
+                  "    pm.expect(p).to.have.property('next');",
+                  "    pm.expect(p).to.have.property('previous');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order?page_size=5&page_number=2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order"],
+              "query": [
+                { "key": "page_size",   "value": "5" },
+                { "key": "page_number", "value": "2" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 — Get Orders by Domain (state=sale)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('All returned orders are confirmed', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    data.forEach(function(order) {",
+                  "        pm.expect(order.state).to.eql('sale');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order?domain=[('state','=','sale')]&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order"],
+              "query": [
+                { "key": "domain",      "value": "[('state','=','sale')]" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 — Get Orders with Field Selection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Only requested fields are returned', function () {",
+                  "    var rec = pm.response.json().data[0];",
+                  "    if (!rec) return;",
+                  "    var allowed = ['id','name','state','amount_total','partner_id','date_order'];",
+                  "    Object.keys(rec).forEach(function(k) {",
+                  "        pm.expect(allowed).to.include(k);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order?fields=id,name,state,amount_total,partner_id,date_order&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order"],
+              "query": [
+                { "key": "fields",      "value": "id,name,state,amount_total,partner_id,date_order" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "05 — Get Orders with Populate (partner + order lines)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('partner_id is populated as object', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    if (!data.length) return;",
+                  "    var partner = data[0].partner_id;",
+                  "    pm.expect(partner).to.be.an('object');",
+                  "    pm.expect(partner.id).to.be.a('number');",
+                  "    pm.expect(partner.name).to.be.a('string');",
+                  "});",
+                  "pm.test('order_line is populated as array', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    if (!data.length) return;",
+                  "    pm.expect(data[0].order_line).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order?fields=id,name,state,amount_total,partner_id,order_line&populate=partner_id:name,email,phone|order_line:product_id,product_uom_qty,price_unit&page_size=5&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order"],
+              "query": [
+                { "key": "fields",      "value": "id,name,state,amount_total,partner_id,order_line" },
+                { "key": "populate",    "value": "partner_id:name,email,phone|order_line:product_id,product_uom_qty,price_unit" },
+                { "key": "page_size",   "value": "5" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "06 — Get Orders Sorted by Date (order param)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Results are returned', function () {",
+                  "    pm.expect(pm.response.json().data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order?fields=id,name,date_order,amount_total&order=date_order desc&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order"],
+              "query": [
+                { "key": "fields",      "value": "id,name,date_order,amount_total" },
+                { "key": "order",       "value": "date_order desc" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "07 — Get Single Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Exactly one record returned', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data).to.be.an('array');",
+                  "    pm.expect(data.length).to.be.at.most(1);",
+                  "});",
+                  "pm.test('Record id matches request', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    if (data.length) {",
+                  "        pm.expect(data[0].id).to.eql(Number(pm.collectionVariables.get('order_id')));",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order", "{{order_id}}"]
+            }
+          }
+        },
+        {
+          "name": "08 — Create Sale Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Record created with ID', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data).to.be.an('array').with.lengthOf(1);",
+                  "    pm.expect(data[0].id).to.be.a('number');",
+                  "    pm.collectionVariables.set('order_id', data[0].id.toString());",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization",  "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partner_id\": {{partner_id}},\n  \"order_line\": [\n    {\n      \"product_id\": {{product_id}},\n      \"product_uom_qty\": 2,\n      \"price_unit\": 100.00\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order"]
+            }
+          }
+        },
+        {
+          "name": "09 — Update Sale Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Record returned after update', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data).to.be.an('array').with.lengthOf(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Updated via IBS API\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order", "{{order_id}}"]
+            }
+          }
+        },
+        {
+          "name": "10 — Confirm Sale Order (Action)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Action executed', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(true);",
+                  "    pm.expect(body.data.action).to.eql('action_confirm');",
+                  "    pm.expect(body.data.record_id).to.eql(Number(pm.collectionVariables.get('order_id')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order/{{order_id}}/action_confirm",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order", "{{order_id}}", "action_confirm"]
+            }
+          }
+        },
+        {
+          "name": "11 — Delete Sale Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Record deleted', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(true);",
+                  "    pm.expect(body.data.deleted_id).to.eql(Number(pm.collectionVariables.get('order_id')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order", "{{order_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contacts (res.partner)",
+      "item": [
+        {
+          "name": "01 — Get All Partners",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Data is array', function () { pm.expect(pm.response.json().data).to.be.an('array'); });",
+                  "pm.test('Pagination present', function () { pm.expect(pm.response.json().pagination).to.exist; });",
+                  "pm.test('Save first partner id', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    if (data.length) pm.collectionVariables.set('partner_id', data[0].id.toString());",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/res.partner?fields=id,name,email,phone,is_company&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "res.partner"],
+              "query": [
+                { "key": "fields",      "value": "id,name,email,phone,is_company" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 — Get Companies Only (Domain)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('All records are companies', function () {",
+                  "    pm.response.json().data.forEach(function(p) {",
+                  "        pm.expect(p.is_company).to.eql(true);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/res.partner?domain=[('is_company','=',True)]&fields=id,name,email,phone,is_company&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "res.partner"],
+              "query": [
+                { "key": "domain",      "value": "[('is_company','=',True)]" },
+                { "key": "fields",      "value": "id,name,email,phone,is_company" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 — Get Partner with Country (Populate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('country_id is populated', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    if (!data.length || !data[0].country_id) return;",
+                  "    pm.expect(data[0].country_id).to.be.an('object');",
+                  "    pm.expect(data[0].country_id.name).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/res.partner?fields=id,name,email,country_id&populate=country_id:name,code&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "res.partner"],
+              "query": [
+                { "key": "fields",      "value": "id,name,email,country_id" },
+                { "key": "populate",    "value": "country_id:name,code" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 — Get Partners with Profile Images as URLs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('image_1920 replaced with URL', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    data.forEach(function(p) {",
+                  "        if ('image_1920' in p) pm.expect(p.image_1920).to.be.null;",
+                  "        if ('image_1920_url' in p) pm.expect(p.image_1920_url).to.include('/web/image');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/res.partner?fields=id,name,image_1920&image_urls=true&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "res.partner"],
+              "query": [
+                { "key": "fields",      "value": "id,name,image_1920" },
+                { "key": "image_urls",  "value": "true" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "05 — Create Partner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Partner created', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data[0].id).to.be.a('number');",
+                  "    pm.collectionVariables.set('partner_id', data[0].id.toString());",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"IBS Test Customer\",\n  \"email\": \"test@ibs-egy.com\",\n  \"phone\": \"+20 100 000 0000\",\n  \"is_company\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/res.partner",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "res.partner"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products (product.product)",
+      "item": [
+        {
+          "name": "01 — Get All Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Data is array', function () { pm.expect(pm.response.json().data).to.be.an('array'); });",
+                  "pm.test('Save first product id', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    if (data.length) pm.collectionVariables.set('product_id', data[0].id.toString());",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/product.product?fields=id,name,list_price,default_code,categ_id&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "product.product"],
+              "query": [
+                { "key": "fields",      "value": "id,name,list_price,default_code,categ_id" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 — Get Products with Category (Populate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('categ_id is populated object', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    if (!data.length || !data[0].categ_id) return;",
+                  "    pm.expect(data[0].categ_id).to.be.an('object');",
+                  "    pm.expect(data[0].categ_id.name).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/product.product?fields=id,name,list_price,categ_id&populate=categ_id:name,complete_name&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "product.product"],
+              "query": [
+                { "key": "fields",      "value": "id,name,list_price,categ_id" },
+                { "key": "populate",    "value": "categ_id:name,complete_name" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 — Get Products with Image URLs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('image_1920 converted to URL', function () {",
+                  "    var data = pm.response.json().data;",
+                  "    data.forEach(function(p) {",
+                  "        if ('image_1920' in p) pm.expect(p.image_1920).to.be.null;",
+                  "        if ('image_1920_url' in p) pm.expect(p.image_1920_url).to.include('/web/image');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/product.product?fields=id,name,list_price,image_1920&image_urls=true&page_size=10&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "product.product"],
+              "query": [
+                { "key": "fields",      "value": "id,name,list_price,image_1920" },
+                { "key": "image_urls",  "value": "true" },
+                { "key": "page_size",   "value": "10" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 — Filter Products by Price < 500",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('All prices under 500', function () {",
+                  "    pm.response.json().data.forEach(function(p) {",
+                  "        pm.expect(p.list_price).to.be.below(500);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/product.product?domain=[('list_price','<',500)]&fields=id,name,list_price,default_code&order=list_price asc&page_size=20&page_number=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "product.product"],
+              "query": [
+                { "key": "domain",      "value": "[('list_price','<',500)]" },
+                { "key": "fields",      "value": "id,name,list_price,default_code" },
+                { "key": "order",       "value": "list_price asc" },
+                { "key": "page_size",   "value": "20" },
+                { "key": "page_number", "value": "1" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Scenarios",
+      "item": [
+        {
+          "name": "Missing Authorization Header",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Error type is missing_authorization', function () {",
+                  "    pm.expect(pm.response.json().error.type).to.eql('missing_authorization');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order"]
+            }
+          }
+        },
+        {
+          "name": "Invalid Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Error type is invalid_token', function () {",
+                  "    pm.expect(pm.response.json().error.type).to.eql('invalid_token');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer ibs_invalid_token_for_testing" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order"]
+            }
+          }
+        },
+        {
+          "name": "Unknown Model",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('Error type is model_not_available', function () {",
+                  "    pm.expect(pm.response.json().error.type).to.eql('model_not_available');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/nonexistent.model",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "nonexistent.model"]
+            }
+          }
+        },
+        {
+          "name": "Record Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 with empty array', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().data).to.eql([]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/sale.order/9999999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "sale.order", "9999999"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
