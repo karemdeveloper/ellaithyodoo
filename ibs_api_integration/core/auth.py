@@ -7,4 +7,4 @@ def generate_token():
 
 
 def token_expiration():
-    return datetime.now() + timedelta(days=30)
+    return datetime.now() + timedelta(days=20000)
