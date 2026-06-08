@@ -161,21 +161,10 @@ class ResComplaint(models.Model):
                 ('res_id', '=', record.id),
             ], order='id desc', limit=1)
 
-            print(last_mail, '=== last_mail ===')
-
             email_to = last_mail.email_to if last_mail else ''
             email_cc = last_mail.email_cc if last_mail else ''
             partner_ids = last_mail.recipient_ids.ids if last_mail else []
-
-            solved_header = """<p style="color: green; font-weight: bold ;">✅ تم حل الشكوى</p>"""
-
-            if last_mail and last_mail.body_html:
-                final_body = solved_header + last_mail.body_html
-            elif template:
-                rendered_body = template._render_field('body_html', [record.id])[record.id]
-                final_body = solved_header + rendered_body
-            else:
-                final_body = solved_header
+            #  send email
             if template:
                 template.send_mail(
                     record.id,
@@ -185,10 +174,8 @@ class ResComplaint(models.Model):
                         'email_cc': email_cc,
                         'partner_ids': [(6, 0, partner_ids)],
                         'email_from': "odoo@ellaithy.com.eg",
-                        'body_html': final_body,
                     }
                 )
-                print('=== Email sent with body from last_mail ===')
 
         return True
     def action_send_complaint_email(self):

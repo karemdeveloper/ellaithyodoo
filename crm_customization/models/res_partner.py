@@ -1,3 +1,4 @@
+import phonenumbers
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 
@@ -88,38 +89,40 @@ class ResPartner(models.Model):
         for rec in self:
             rec.branch_id = rec.area_id.branch_area.id if rec.area_id else False
 
-    @api.constrains('phone')
-    def _check_duplicate_phone(self):
-        """Validate that phone number is unique"""
-        for record in self:
-            if record.phone:
-                duplicate_phone = self.search([
-                    ('phone', '=', record.phone),
-                    ('id', '!=', record.id)
-                ], limit=1)
-                if duplicate_phone:
-                    raise ValidationError(
-                        f"Phone number '{record.phone}' already exists for customer: {duplicate_phone.name}"
-                    )
+    def _normalize_phone(self, number, default_region='EG'):
+        if not number:
+            return False
+        try:
+            parsed = phonenumbers.parse(number, default_region)
+            if phonenumbers.is_valid_number(parsed):
+                return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+        except Exception:
+            pass
+        return ''.join(filter(str.isdigit, number))
 
-    # @api.constrains('phone', 'mobile')
-    # def _check_duplicate_phone_mobile(self):
-    #     for record in self:
-    #         if record.mobile:
-    #             duplicate_mobile = self.search([
-    #                 ('mobile', '=', record.mobile),
-    #                 ('id', '!=', record.id)
-    #             ], limit=1)
-    #             if duplicate_mobile:
-    #                 raise ValidationError("Mobile number already exists for another contact.")
-    #
-    #         if record.phone:
-    #             duplicate_phone = self.search([
-    #                 ('phone', '=', record.phone),
-    #                 ('id', '!=', record.id)
-    #             ], limit=1)
-    #             if duplicate_phone:
-    #                 raise ValidationError("Phone number already exists for another contact.")
+    @api.constrains('phone', 'mobile')
+    def _check_duplicate_phone(self):
+        """Validate that phone and mobile are unique across all contacts (country-code aware)"""
+        for rec in self:
+            normalized = [n for n in [
+                self._normalize_phone(rec.phone),
+                self._normalize_phone(rec.mobile),
+            ] if n]
+
+            if not normalized:
+                continue
+
+            for partner in self.sudo().search([('id', '!=', rec.id)]):
+                existing = [n for n in [
+                    self._normalize_phone(partner.phone),
+                    self._normalize_phone(partner.mobile),
+                ] if n]
+
+                for num in normalized:
+                    if num in existing:
+                        raise ValidationError(
+                            _('Phone number already exists for contact: %s') % partner.display_name
+                        )
 
     ###################################################################################################################
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_archive_redistribute" model="ir.ui.view">
+        <field name="name">res.users.form.archive.redistribute</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_reset_password']" position="after">
+                <button
+                    name="action_archive_and_redistribute"
+                    string="Archive &amp; Redistribute"
+                    type="object"
+                    class="btn-danger"
+                    confirm="This will archive the user and reassign all their open opportunities using the standard distribution logic. Continue?"
+                    groups="base.group_system"
+                    invisible="active == False"
+                />
+            </xpath>
+        </field>
+    </record>
+</odoo>

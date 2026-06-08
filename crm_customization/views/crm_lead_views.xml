@@ -16,7 +16,6 @@
             </xpath>
             <xpath expr="//group[@name='opportunity_partner']//field[@name='partner_id']" position="attributes">
                 <attribute name="readonly">not_lead_access</attribute>
-                <attribute name="options">{'no_quick_create': True}</attribute>
             </xpath>
             <xpath expr="//field[@name='email_from']" position="attributes">
                 <attribute name="readonly">not_lead_access</attribute>
@@ -30,6 +29,7 @@
             <xpath expr="//field[@name='tag_ids']" position="attributes">
                 <attribute name="readonly">not_lead_access</attribute>
             </xpath>
+
 
 
             <!-- Add ibs_closed_at field -->
@@ -97,8 +97,7 @@
                        readonly="not_lead_access"/>
                 <field name="call_type" options="{'no_create': True, 'no_edit': True}" required="1"
                        readonly="not_lead_access"/>
-                <field name="hotline_transfer" string="Hotline-Transfer"
-                       groups="sales_team.group_sale_salesman_all_leads"/>
+                <field name="hotline_transfer" string="Hotline-Transfer" groups="sales_team.group_sale_salesman_all_leads"/>
 
                 <field name="has_feedback" invisible="1"/>
             </xpath>
@@ -236,9 +235,6 @@
                        required="1"/>
                 <field name="call_type" string="Call Type" placeholder="Call Type"
                        options="{'no_create': True, 'no_edit': True}" required="1"/>
-            </xpath>
-            <xpath expr="//field[@name='partner_id']" position="attributes">
-                <attribute name="options">{'no_quick_create': True}</attribute>
             </xpath>
         </field>
     </record>
