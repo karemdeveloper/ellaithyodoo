@@ -22,6 +22,10 @@ class ResPartner(models.Model):
     survey_ids = fields.One2many('res.survey', 'partner_id', string="Surveys")
     crm_source_id = fields.Many2one('res.source', string="Source", required=True)
 
+    # Indexed to speed up duplicate-phone lookups (_check_duplicate_phone,
+    # _compute_customer_already_exist), which do a full search('phone', '=', ...)
+    phone = fields.Char(index=True)
+
     def action_open_create_opportunity_wizard(self):
         """Open the wizard popup"""
         return {
