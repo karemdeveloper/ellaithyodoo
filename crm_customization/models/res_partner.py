@@ -22,9 +22,15 @@ class ResPartner(models.Model):
     survey_ids = fields.One2many('res.survey', 'partner_id', string="Surveys")
     crm_source_id = fields.Many2one('res.source', string="Source", required=True)
 
-    # Indexed to speed up duplicate-phone lookups (_check_duplicate_phone,
-    # _compute_customer_already_exist), which do a full search('phone', '=', ...)
+    # Indexed to speed up duplicate-phone lookups (_compute_customer_already_exist),
+    # which does a full search('phone', '=', ...)
     phone = fields.Char(index=True)
+
+    # Stored & indexed normalized (E.164) representations of phone/mobile,
+    # used by _check_duplicate_phone to do an indexed DB lookup instead of
+    # loading and re-parsing every contact in the database.
+    phone_normalized = fields.Char(string="Phone (Normalized)", compute="_compute_normalized_phones", store=True, index=True)
+    mobile_normalized = fields.Char(string="Mobile (Normalized)", compute="_compute_normalized_phones", store=True, index=True)
 
     def action_open_create_opportunity_wizard(self):
         """Open the wizard popup"""
@@ -104,29 +110,30 @@ class ResPartner(models.Model):
             pass
         return ''.join(filter(str.isdigit, number))
 
+    @api.depends('phone', 'mobile')
+    def _compute_normalized_phones(self):
+        for rec in self:
+            rec.phone_normalized = rec._normalize_phone(rec.phone) or False
+            rec.mobile_normalized = rec._normalize_phone(rec.mobile) or False
+
     @api.constrains('phone', 'mobile')
     def _check_duplicate_phone(self):
         """Validate that phone and mobile are unique across all contacts (country-code aware)"""
         for rec in self:
-            normalized = [n for n in [
-                self._normalize_phone(rec.phone),
-                self._normalize_phone(rec.mobile),
-            ] if n]
+            normalized = [n for n in [rec.phone_normalized, rec.mobile_normalized] if n]
 
             if not normalized:
                 continue
 
-            for partner in self.sudo().search([('id', '!=', rec.id)]):
-                existing = [n for n in [
-                    self._normalize_phone(partner.phone),
-                    self._normalize_phone(partner.mobile),
-                ] if n]
+            duplicate = self.sudo().search([
+                ('id', '!=', rec.id),
+                '|', ('phone_normalized', 'in', normalized), ('mobile_normalized', 'in', normalized),
+            ], limit=1)
 
-                for num in normalized:
-                    if num in existing:
-                        raise ValidationError(
-                            _('Phone number already exists for contact: %s') % partner.display_name
-                        )
+            if duplicate:
+                raise ValidationError(
+                    _('Phone number already exists for contact: %s') % duplicate.display_name
+                )
 
     ###################################################################################################################
 
