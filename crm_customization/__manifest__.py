@@ -5,7 +5,7 @@
     'description': 'Add mandatory fields, and add opportunity for customer.',
     'category': 'CRM',
     'author': 'IBS',
-    'depends': ['base', 'crm','crm_sms','crm_iap_enrich','sale_crm'],
+    'depends': ['base', 'crm','crm_sms','crm_iap_enrich','sale_crm','helpdesk'],
     'data': [
         'security/groups.xml',
         'security/ir.model.access.csv',
