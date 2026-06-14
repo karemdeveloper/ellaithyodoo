@@ -23,6 +23,7 @@
                 <field name="late_days"/>
                 <field name="days_since_creation"/>
                 <field name="creation_late_days"/>
+                <field name="complaint_category_id"/>
                 <field name="solving_date"/>
                 <field name="complaint_state" widget="badge" decoration-info="complaint_state=='new'"
                        decoration-warning="complaint_state=='under_investigate'"
@@ -88,6 +89,7 @@
                             <field name="escalation_line_id"
                                    readonly="complaint_state in ['under_investigate', 'solved']"/>
                             <field name="validity"/>
+                            <field name="ticket_id"/>
                         </group>
                     </group>
                     <group>
@@ -100,6 +102,7 @@
                         <group>
                             <field name="solving_date" readonly="1"/>
                             <field name="creation_late_days" readonly="1"/>
+                            <field name="complaint_category_id"/>
                         </group>
                     </group>
                 </sheet>

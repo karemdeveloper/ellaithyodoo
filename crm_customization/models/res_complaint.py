@@ -60,12 +60,26 @@ class ResComplaint(models.Model):
         ('valid', 'Valid'),
         ('not_valid', 'Not Valid')
     ], string='Validity', tracking=True)
+    # field related to helpdesk.ticket
+    ticket_id = fields.Many2one('helpdesk.ticket', string='Helpdesk Ticket', readonly=True, copy=False)
+    complaint_category_id= fields.Many2one('complaint.category', string='Complaint Category',)
 
     @api.model
     def create(self, vals):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('res.complaint') or 'New'
-        return super(ResComplaint, self).create(vals)
+
+        record = super(ResComplaint, self).create(vals)
+        # create helpdesk ticket
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': f"Complaint: {record.name}",
+            'partner_id': record.customer_id.id,
+            'partner_phone': record.primary_phone,
+            'description': f"Complaint Type: {record.complaint_type_id.name or ''}\nReason: {record.complaint_reason_id.name or ''}",
+        })
+        record.ticket_id = ticket.id
+
+        return record
 
     @api.onchange('department')
     def _onchange_department(self):

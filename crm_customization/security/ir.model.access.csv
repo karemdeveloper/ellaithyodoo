@@ -17,6 +17,8 @@ access_res_department_user,res.department user,model_res_department,base.group_u
 access_res_department_admin,res.department admin,model_res_department,base.group_system,1,1,1,1
 access_res_complaint,res.complaint,model_res_complaint,crm_customization.group_complaint_customer_care_manager,1,1,1,1
 access_res_complaint_user,res.complaint.user,model_res_complaint,base.group_user,1,0,0,0
+access_complaint_category,complaint.category,model_complaint_category,,1,1,1,1
+
 access_res_complaint_reason_user,res.complaint.reason user,model_res_complaint_reason,base.group_user,1,0,0,0
 access_res_complaint_reason_admin,res.complaint.reason admin,model_res_complaint_reason,base.group_system,1,1,1,1
 access_res_complaint_type_user,res.complaint.type user,model_res_complaint_type,base.group_user,1,0,0,0

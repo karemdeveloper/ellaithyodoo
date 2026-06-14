@@ -24,6 +24,7 @@ from . import crm_feedback
 from . import crm_feedback_wizard
 from . import res_department
 from . import res_complaint
+from . import complaint_category
 from . import res_complaint_reason
 from . import res_complaint_type
 from . import res_escalation
