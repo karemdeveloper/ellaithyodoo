@@ -16,14 +16,17 @@
         <field name="model">car.request</field>
         <field name="arch" type="xml">
             <list string="Car Requests">
-                <field name="first_name"/>
-                <field name="last_name"/>
-                <field name="phone_number"/>
-                <field name="area"/>
-                <field name="car_brand"/>
-                <field name="car_model"/>
-                <field name="year_of_manufacture"/>
-                <field name="state" widget="badge" decoration-warning="state == 'draft'" decoration-success="state == 'lead'"/>
+                <field name="first_name" optional="show"/>
+                <field name="last_name" optional="show"/>
+                <field name="phone_number" optional="show"/>
+                <field name="area" optional="show"/>
+                <field name="car_brand" optional="show"/>
+                <field name="car_model" optional="show"/>
+                <field name="year_of_manufacture" optional="show"/>
+                <field name="email" optional="show"/>
+                <field name="car_category" optional="show"/>
+                <field name="year_of_manufacture" optional="show"/>
+                <field name="state" widget="badge" decoration-warning="state == 'draft'" decoration-success="state == 'lead'" optional="show"/>
             </list>
         </field>
     </record>
