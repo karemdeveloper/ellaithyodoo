@@ -20,9 +20,10 @@
         <field name="model">suggestion.complaint</field>
         <field name="arch" type="xml">
             <list string="Suggestion Complaints">
-                <field name="first_name"/>
-                <field name="last_name"/>
-                <field name="phone"/>
+                <field name="first_name" optional="show"/>
+                <field name="last_name" optional="show"/>
+                <field name="phone" optional="show"/>
+                <field name="email" optional="show"/>
             </list>
         </field>
     </record>
