@@ -24,6 +24,7 @@
                 <field name="last_name" optional="show"/>
                 <field name="phone" optional="show"/>
                 <field name="email" optional="show"/>
+                <field name="create_date" optional="show"/>
             </list>
         </field>
     </record>
