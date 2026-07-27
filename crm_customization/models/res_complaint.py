@@ -23,7 +23,7 @@ class ResComplaint(models.Model):
 
     # Assigned to (Many2many)
     assigned_to_ids = fields.Many2many('res.users', string='Assigned To', tracking=True, required=True)
-
+    create_at= fields.Datetime(string='Created At', tracking=True, default=fields.Date.context_today)
     # Remove validity field (valid/not valid)
     # Remove solved_by field
 
