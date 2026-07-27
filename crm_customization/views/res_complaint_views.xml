@@ -79,6 +79,8 @@
                             <field name="salesperson_id" readonly="1"/>
                             <field name="complaint_reason_id"
                                    readonly="complaint_state in ['under_investigate', 'solved']"/>
+                            <field name="complaint_user_id"
+                                   invisible="not complaint_reason_id or not complaint_reason_id.has_user"/>
                             <field name="complaint_type_id"
                                    readonly="complaint_state in ['under_investigate', 'solved']"/>
                         </group>

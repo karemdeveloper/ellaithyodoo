@@ -1,4 +1,5 @@
 from . import res_users
+from . import complaint_user
 from . import res_partner
 from . import res_area
 from . import res_branch

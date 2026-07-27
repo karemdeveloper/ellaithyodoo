@@ -7,3 +7,4 @@ class ResComplaintReason(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string="Name")
+    has_user = fields.Boolean(string="Has User")

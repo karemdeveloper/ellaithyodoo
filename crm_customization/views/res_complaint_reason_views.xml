@@ -20,6 +20,7 @@
                 <sheet>
                     <group>
                         <field name="name"/>
+                        <field name="has_user"/>
                     </group>
                 </sheet>
                  <!-- Attachment preview -->

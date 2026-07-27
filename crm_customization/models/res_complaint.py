@@ -20,6 +20,7 @@ class ResComplaint(models.Model):
     # Salesperson from customer
     salesperson_id = fields.Many2one(related='customer_id.user_id', string='Salesperson',
                                      store=True, readonly=True, tracking=True)
+    complaint_user_id = fields.Many2one('complaint.user', string='User',)
 
     # Assigned to (Many2many)
     assigned_to_ids = fields.Many2many('res.users', string='Assigned To', tracking=True, required=True)
