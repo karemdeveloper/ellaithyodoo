@@ -26,6 +26,7 @@
                 <field name="complaint_category_id"/>
                 <field name="solving_date"/>
                 <field name="create_at"/>
+                <field name="serial_number"/>
                 <field name="complaint_state" widget="badge" decoration-info="complaint_state=='new'"
                        decoration-warning="complaint_state=='under_investigate'"
                        decoration-success="complaint_state=='solved'"
@@ -107,6 +108,7 @@
                             <field name="creation_late_days" readonly="1"/>
                             <field name="complaint_category_id"/>
                             <field name="create_at"/>
+                            <field name="serial_number" required="1"/>
                         </group>
                     </group>
                 </sheet>

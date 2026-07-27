@@ -64,6 +64,7 @@ class ResComplaint(models.Model):
     # field related to helpdesk.ticket
     ticket_id = fields.Many2one('helpdesk.ticket', string='Helpdesk Ticket', readonly=True, copy=False)
     complaint_category_id= fields.Many2one('complaint.category', string='Complaint Category',)
+    serial_number= fields.Char(string='Serial Number')
 
     @api.model
     def create(self, vals):
