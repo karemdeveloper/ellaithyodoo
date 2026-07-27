@@ -22,6 +22,8 @@ from . import marketing_offer
 from . import call_type
 from . import distribute_sequence
 from . import crm_feedback
+from . import crm_note
+from . import crm_note_wizard
 from . import crm_feedback_wizard
 from . import res_department
 from . import res_complaint

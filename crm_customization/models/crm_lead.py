@@ -1,5 +1,5 @@
 from odoo import models, fields, api,_
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError, ValidationError, RedirectWarning
 from datetime import datetime
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 import pytz
@@ -25,6 +25,7 @@ class CrmLead(models.Model):
     marketing_offer=fields.Many2one('marketing.offers',string='Marketing offer')
     call_type=fields.Many2one('call.type',string='Call Type')
     feedback_ids = fields.One2many('crm.feedback', 'lead_id', string="Feedback Lines")
+    note_ids = fields.One2many('crm.note', 'lead_id', string="Note Lines")
     has_feedback = fields.Boolean(string="Has Feedback", default=False)
     sub_brand_used_id = fields.Many2many(
         'res.sub.brand',
@@ -420,7 +421,8 @@ class CrmLead(models.Model):
         # Validate stage change BEFORE any processing
         if 'stage_id' in vals and vals.get('stage_id'):
             new_stage = self.env['crm.stage'].browse(vals['stage_id'])
-            
+            changed_leads = self.browse()
+
             # Check if any lead is changing stage
             for lead in self:
                 if lead.stage_id.id != vals['stage_id']:
@@ -458,7 +460,26 @@ class CrmLead(models.Model):
                             _("Cannot change stage. Please fill the following required fields first:\n\n• %s") 
                             % '\n• '.join(missing_fields)
                         )
-        
+
+                    changed_leads |= lead
+
+            # Require a note whenever the stage actually changes, regardless of the
+            # entry point (Kanban drag & drop, statusbar, API call, Automation Rule...).
+            # Won/Lost transitions already go through their own dedicated wizards
+            # (opportunity.won.wizard / action_set_lost), which mark the write with
+            # 'from_won_wizard' / 'skip_note_wizard' so they are not asked twice.
+            if changed_leads and not self.env.context.get('skip_note_wizard') and not self.env.context.get('from_won_wizard'):
+                action = self.env.ref('crm_customization.action_crm_note_wizard')
+                raise RedirectWarning(
+                    _("Please add a note explaining this stage change before it is saved."),
+                    action.id,
+                    _('Add Note'),
+                    {
+                        'default_lead_ids': changed_leads.ids,
+                        'default_new_stage_id': new_stage.id,
+                    }
+                )
+
         if vals.get('website'):
             vals['website'] = self.env['res.partner']._clean_website(vals['website'])
 
@@ -513,6 +534,8 @@ class CrmLead(models.Model):
         if leads_already_won:
             vals.pop('date_closed', False)
             result = super(CrmLead, leads_already_won).write(vals)
+
+
         return result
 
     def copy(self, default=None):

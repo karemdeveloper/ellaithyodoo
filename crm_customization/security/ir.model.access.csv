@@ -36,6 +36,10 @@ access_inactive_reason_user,inactive.reason user,model_inactive_reason,base.grou
 access_inactive_reason_admin,inactive.reason admin,model_inactive_reason,base.group_system,1,1,1,1
 access_distribute_sequence,distribute.sequence,model_distribute_sequence,,1,1,1,1
 access_crm_feedback,crm.feedback,model_crm_feedback,,1,1,1,1
+access_crm_note,crm.note,model_crm_note,,1,1,1,1
+access_crm_note_wizard,crm.note.wizard,model_crm_note_wizard,,1,1,1,1
+
+
 access_inactive_request,inactive.request,model_inactive_request,,1,1,1,1
 access_res_company_custom,res.company.custom,model_res_company_custom,,1,1,1,1
 access_opportunity_wizard,opportunity.wizard,model_opportunity_wizard,,1,1,1,1

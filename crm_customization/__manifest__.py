@@ -47,6 +47,7 @@
         'views/call_type_views.xml',
         'views/distribute_sequence_views.xml',
         'views/crm_feedback_wizard_view.xml',
+        'views/crm_note_wizard_view.xml',
         'views/res_department_views.xml',
         'views/res_complaint_views.xml',
         'views/complaint_category_views.xml',
