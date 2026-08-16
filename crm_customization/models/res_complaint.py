@@ -13,7 +13,7 @@ class ResComplaint(models.Model):
     primary_phone = fields.Char(related='customer_id.phone', string='Primary Phone', store=True, readonly=True)
     complaint_reason_id = fields.Many2one('res.complaint.reason', string='Complaint Reason',
                                           tracking=True, required=True)
-    branch_id = fields.Many2one('res.branch', string='Branch', tracking=True)
+    branch_id = fields.Many2one('res.branch', string='Branch', tracking=True, compute='_compute_branch_id', store=True, readonly=False)
     department = fields.Many2one('res.department', string='Department', tracking=True, required=True)
     escalation_line_id = fields.Many2one('res.escalation', string='Escalation Line', tracking=True)
 
@@ -244,3 +244,14 @@ class ResComplaint(models.Model):
             'target': 'new',
             'context': ctx,
         }
+
+
+
+    ############################################################
+    @api.depends('salesperson_id', 'salesperson_id.sale_team_id.branch_name')
+    def _compute_branch_id(self):
+        for record in self:
+            if record.salesperson_id and record.salesperson_id.sale_team_id:
+                record.branch_id = record.salesperson_id.sale_team_id.branch_name.id
+            else:
+                record.branch_id = False
