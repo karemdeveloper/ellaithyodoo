@@ -214,6 +214,14 @@
         <field name="category_id" ref="base.module_category_sales_sales"/>
         <field name="comment">Can see all complaints</field>
     </record>
+    <!-- NEW: group that allows editing after complaint is solved / under investigation -->
+    <record id="group_complaint_edit_after_solved" model="res.groups">
+        <field name="name">Can Access Complaint After Solved</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="comment">Users in this group can edit complaint fields even after the complaint is
+            Under Investigation or Solved.
+        </field>
+    </record>
 
     <!-- Complaint Record Rules -->
     <!-- Rule 1: Own Complaints -->

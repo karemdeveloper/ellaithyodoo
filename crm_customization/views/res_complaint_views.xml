@@ -74,24 +74,25 @@
                     </div>
                     <group>
                         <group>
-                            <field name="date" readonly="complaint_state in ['under_investigate', 'solved']"/>
-                            <field name="customer_id" readonly="complaint_state in ['under_investigate', 'solved']"/>
+                            <field name="can_edit_after_solved" invisible="1"/>
+                            <field name="date" readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                            <field name="customer_id" readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
                             <field name="primary_phone" readonly="1"/>
                             <field name="salesperson_id" readonly="1"/>
                             <field name="complaint_reason_id"
-                                   readonly="complaint_state in ['under_investigate', 'solved']"/>
+                                   readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
                             <field name="complaint_user_id"
                                    invisible="not complaint_reason_id or not complaint_reason_id.has_user"/>
                             <field name="complaint_type_id"
-                                   readonly="complaint_state in ['under_investigate', 'solved']"/>
+                                   readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
                         </group>
                         <group>
-                            <field name="branch_id" readonly="complaint_state in ['under_investigate', 'solved']"/>
-                            <field name="department" readonly="complaint_state in ['under_investigate', 'solved']"/>
+                            <field name="branch_id" readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                            <field name="department" readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
                             <field name="assigned_to_ids" widget="many2many_tags"
-                                   readonly="complaint_state in ['under_investigate', 'solved']"/>
+                                   readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
                             <field name="escalation_line_id"
-                                   readonly="complaint_state in ['under_investigate', 'solved']"/>
+                                   readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
                             <field name="validity"/>
                             <field name="ticket_id"/>
                         </group>

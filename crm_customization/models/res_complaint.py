@@ -255,3 +255,13 @@ class ResComplaint(models.Model):
                 record.branch_id = record.salesperson_id.sale_team_id.branch_name.id
             else:
                 record.branch_id = False
+    ########################################################################
+    can_edit_after_solved = fields.Boolean(
+        string='Can Edit After Solved',
+        compute='_compute_can_edit_after_solved',
+    )
+
+    def _compute_can_edit_after_solved(self):
+        has_group = self.env.user.has_group('crm_customization.group_complaint_edit_after_solved')
+        for record in self:
+            record.can_edit_after_solved = has_group
