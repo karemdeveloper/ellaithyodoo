@@ -49,4 +49,4 @@ class InActiveRequest(models.Model):
             rec.team_leader = member.team_leader.id if member else False
 ####################################################################################################
     # field to store the salesperson (current user) who created the inactive request
-    salesperson_id = fields.Many2one('res.users',string='Salesperson',default=lambda self: self.env.user,readonly=True,tracking=True)
+    salesperson_id = fields.Many2one('res.users',string='Salesperson',default=lambda self: self.env.user,readonly=False,tracking=True)
