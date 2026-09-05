@@ -43,8 +43,13 @@
                         <group>
                             <field name="date" readonly="state=='approved'"/>
                             <field name="inactive_reason" readonly="state=='approved'"/>
-                            <field name="salesperson_id"
-                                   domain="['|', ('id', '=', uid), ('sale_team_id.user_id', '=', uid)]"/>
+                           <field name="salesperson_id"
+                                   domain="[
+                                       '|', '|',
+                                       ('id', '=', uid),
+                                       ('sale_team_id.user_id', '=', uid),
+                                       ('sale_team_id.branch_name.branch_manager', '=', uid)
+                                   ]"/>
                         </group>
                         <group>
 
