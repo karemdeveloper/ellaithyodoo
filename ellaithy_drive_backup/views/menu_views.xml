@@ -1,0 +1,5 @@
+<odoo>
+    <menuitem id="menu_ellaithy_drive_backup_root" name="Backup" sequence="90" groups="base.group_system"/>
+    <menuitem id="menu_ellaithy_drive_backup_config" name="Google Drive Backup" parent="menu_ellaithy_drive_backup_root" action="action_ellaithy_drive_backup_config" sequence="10" groups="base.group_system"/>
+    <menuitem id="menu_ellaithy_drive_backup_log" name="Backup History" parent="menu_ellaithy_drive_backup_root" action="action_ellaithy_drive_backup_log" sequence="20" groups="base.group_system"/>
+</odoo>

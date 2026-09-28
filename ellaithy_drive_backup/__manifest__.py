@@ -1,0 +1,20 @@
+{
+    'name': 'Ellaithy Google Drive Backup',
+    'version': '18.0.1.0.0',
+    'category': 'Administration',
+    'summary': 'Automatic Odoo database and filestore backups to Google Drive',
+    'description': 'Create scheduled Odoo database backups and upload them to Google Drive using the Google Drive REST API.',
+    'author': 'Ellaithy',
+    'license': 'LGPL-3',
+    'depends': ['base', 'web'],
+    'external_dependencies': {'python': ['requests']},
+    'data': [
+        'security/ir.model.access.csv',
+        'data/ir_cron.xml',
+        'views/backup_config_views.xml',
+        'views/backup_log_views.xml',
+        'views/menu_views.xml',
+    ],
+    'installable': True,
+    'application': True,
+}
