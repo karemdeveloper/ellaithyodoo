@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compare_module.CompareDashboard">
+        <div class="o_compare_dashboard">
+            <div class="cmp-top-tabs" role="tablist">
+                <button type="button" class="cmp-top-tab" t-att-class="state.activeTab === 'compare' ? 'cmp-top-tab active' : 'cmp-top-tab'" t-on-click="() => this.setTab('compare')">Comparison</button>
+                <button type="button" class="cmp-top-tab" t-att-class="state.activeTab === 'analytics' ? 'cmp-top-tab active' : 'cmp-top-tab'" t-on-click="() => this.setTab('analytics')">Marketing Analytics</button>
+                <button type="button" class="cmp-top-tab" t-att-class="state.activeTab === 'charts' ? 'cmp-top-tab active' : 'cmp-top-tab'" t-on-click="() => this.setTab('charts')">Charts</button>
+            </div>
+            <t t-if="state.activeTab === 'analytics'">
+                <div class="cmp-page-header">
+                    <div><h1>Marketing Analytics</h1><p>Marketing source, branch, conversion and spend intelligence based on CRM records.</p></div>
+                    <button type="button" class="btn cmp-btn-dark" t-on-click="loadData">Refresh</button>
+                </div>
+                <section class="cmp-filter-card">
+                    <div class="cmp-filter-title">Analytics Filters</div>
+                    <div class="cmp-filter-grid">
+                        <div><label>Baseline month</label><select class="form-select" t-on-change="(ev) => this.onFilterChange(ev, 'firstMonth')">
+                            <t t-foreach="months" t-as="m" t-key="m[0]"><option t-att-value="m[0]" t-att-selected="m[0] === state.firstMonth"><t t-esc="m[1]"/></option></t>
+                        </select></div>
+                        <div><label>Baseline year</label><select class="form-select" t-on-change="(ev) => this.onFilterChange(ev, 'firstYear')">
+                            <t t-foreach="years" t-as="y" t-key="y"><option t-att-value="y" t-att-selected="y === state.firstYear"><t t-esc="y"/></option></t>
+                        </select></div>
+                        <div><label>Target month</label><select class="form-select" t-on-change="(ev) => this.onFilterChange(ev, 'secondMonth')">
+                            <t t-foreach="months" t-as="m" t-key="m[0]"><option t-att-value="m[0]" t-att-selected="m[0] === state.secondMonth"><t t-esc="m[1]"/></option></t>
+                        </select></div>
+                        <div><label>Target year</label><select class="form-select" t-on-change="(ev) => this.onFilterChange(ev, 'secondYear')">
+                            <t t-foreach="years" t-as="y" t-key="y"><option t-att-value="y" t-att-selected="y === state.secondYear"><t t-esc="y"/></option></t>
+                        </select></div>
+                        <div><label>Marketing source</label><select class="form-select" t-on-change="(ev) => this.analyticsChange(ev, 'analyticsSource')">
+                            <option value="all">All sources</option>
+                            <t t-if="state.data"><t t-foreach="analyticsSources()" t-as="source" t-key="source"><option t-att-value="source" t-att-selected="state.analyticsSource === source"><t t-esc="source"/></option></t></t>
+                        </select></div>
+                        <div><label>Branch</label><select class="form-select" t-on-change="(ev) => this.analyticsChange(ev, 'analyticsBranch')">
+                            <option value="all">All branches</option>
+                            <t t-if="state.data"><t t-foreach="analyticsBranches()" t-as="branch" t-key="branch"><option t-att-value="branch" t-att-selected="state.analyticsBranch === branch"><t t-esc="branch"/></option></t></t>
+                        </select></div>
+                        <button type="button" class="btn cmp-btn-dark" t-on-click="loadData">Apply dates</button>
+                    </div>
+                </section>
+                <t t-if="state.loading"><div class="cmp-loading">Loading marketing analytics...</div></t>
+                <t t-elif="state.data">
+                    <div class="mka-kpis">
+                        <div class="mka-kpi"><span>Baseline leads</span><strong t-esc="formatNumber(analyticsValue('source',state.analyticsBranch,state.analyticsSource,'first'))"/></div>
+                        <div class="mka-kpi"><span>Target leads</span><strong t-esc="formatNumber(analyticsValue('source',state.analyticsBranch,state.analyticsSource,'second'))"/></div>
+                        <div class="mka-kpi"><span>Baseline won</span><strong t-esc="formatNumber(analyticsValue('won_source',state.analyticsBranch,state.analyticsSource,'first'))"/></div>
+                        <div class="mka-kpi"><span>Target won</span><strong t-esc="formatNumber(analyticsValue('won_source',state.analyticsBranch,state.analyticsSource,'second'))"/></div>
+                        <div class="mka-kpi"><span>Baseline conversion</span><strong t-esc="analyticsRate(analyticsValue('won_source',state.analyticsBranch,state.analyticsSource,'first'),analyticsValue('source',state.analyticsBranch,state.analyticsSource,'first'))"/></div>
+                        <div class="mka-kpi"><span>Target conversion</span><strong t-esc="analyticsRate(analyticsValue('won_source',state.analyticsBranch,state.analyticsSource,'second'),analyticsValue('source',state.analyticsBranch,state.analyticsSource,'second'))"/></div>
+                        <div class="mka-kpi"><span>Baseline spend</span><strong t-esc="formatMoney(analyticsSpend('first'))"/></div>
+                        <div class="mka-kpi"><span>Target spend</span><strong t-esc="formatMoney(analyticsSpend('second'))"/></div>
+                    </div>
+                    <div class="mka-grid">
+                        <t t-foreach="[{key:'source',dim:'source',title:'Lead inflow by marketing source'},{key:'won_source',dim:'source',title:'Won leads by marketing source'},{key:'source',dim:'branch',title:'Lead generation by branch'},{key:'won_source',dim:'branch',title:'Won opportunities by branch'}]" t-as="chart" t-key="chart.key + chart.dim">
+                            <section class="cmp-card mka-chart">
+                                <div class="cmp-card-header"><h2 t-esc="chart.title"/></div>
+                                <div class="mka-legend"><span class="mka-dot mka-first"/> <t t-esc="state.data.first_title"/> <span class="mka-dot mka-second"/> <t t-esc="state.data.second_title"/></div>
+                                <t t-set="rows" t-value="analyticsRows(chart.key,chart.dim)"/>
+                                <t t-set="maxValue" t-value="analyticsMax(rows)"/>
+                                <div t-if="!rows.length" class="cmp-empty">No records for these filters.</div>
+                                <div t-foreach="rows" t-as="r" t-key="r.name" class="mka-row">
+                                    <div class="mka-row-label"><span t-esc="r.name"/><strong t-esc="formatNumber(r.second)"/></div>
+                                    <div class="mka-bars"><div class="mka-bar mka-bar-first" t-att-style="'width:'+analyticsWidth(r.first,maxValue)"/><div class="mka-bar mka-bar-second" t-att-style="'width:'+analyticsWidth(r.second,maxValue)"/></div>
+                                </div>
+                            </section>
+                        </t>
+                    </div>
+                    <p class="mka-note">Source and branch data follow the module configuration. Spend is sourced from Marketing Costs; revenue, advertising clicks, impressions, and ROI are not inferred. Won counts use the current won-stage classification and the lead creation-date cohort.</p>
+                </t>
+            </t>
+            <t t-if="state.activeTab === 'compare'">
+            <div class="cmp-page-header">
+                <div>
+                    <h1>Monthly Comparison Matrix</h1>
+                    <p>Compare branches, lead sources, won leads, and marketing cost performance.</p>
+                </div>
+                <button class="btn cmp-btn-dark" t-on-click="loadData">
+                    <i class="fa fa-rotate-right me-1"/> Refresh
+                </button>
+            </div>
+
+            <section class="cmp-filter-card">
+                <div class="cmp-filter-title">Compare Filters &amp; Statistics</div>
+                <div class="cmp-filter-grid">
+                    <div>
+                        <label>Baseline Month</label>
+                        <select class="form-select" t-att-value="state.firstMonth" t-on-change="(ev) => this.onFilterChange(ev, 'firstMonth')">
+                            <t t-foreach="months" t-as="month" t-key="month[0]">
+                                <option t-att-value="month[0]" t-att-selected="month[0] === state.firstMonth"><t t-esc="month[1]"/></option>
+                            </t>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Baseline Year</label>
+                        <select class="form-select" t-att-value="state.firstYear" t-on-change="(ev) => this.onFilterChange(ev, 'firstYear')">
+                            <t t-foreach="years" t-as="year" t-key="year">
+                                <option t-att-value="year" t-att-selected="year === state.firstYear"><t t-esc="year"/></option>
+                            </t>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Comparison Month</label>
+                        <select class="form-select" t-att-value="state.secondMonth" t-on-change="(ev) => this.onFilterChange(ev, 'secondMonth')">
+                            <t t-foreach="months" t-as="month" t-key="month[0]">
+                                <option t-att-value="month[0]" t-att-selected="month[0] === state.secondMonth"><t t-esc="month[1]"/></option>
+                            </t>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Comparison Year</label>
+                        <select class="form-select" t-att-value="state.secondYear" t-on-change="(ev) => this.onFilterChange(ev, 'secondYear')">
+                            <t t-foreach="years" t-as="year" t-key="year">
+                                <option t-att-value="year" t-att-selected="year === state.secondYear"><t t-esc="year"/></option>
+                            </t>
+                        </select>
+                    </div>
+                    <button class="btn cmp-btn-dark" t-on-click="loadData"><i class="fa fa-calculator me-1"/> Recalculate</button>
+                </div>
+            </section>
+
+            <t t-if="state.loading">
+                <div class="cmp-loading"><i class="fa fa-spinner fa-spin"/> Loading comparison data...</div>
+            </t>
+            <t t-elif="state.data">
+                <div class="cmp-stats">
+                    <div class="cmp-stat"><span>Baseline</span><strong t-esc="state.data.first_title"/></div>
+                    <div class="cmp-stat"><span>Target</span><strong t-esc="state.data.second_title"/></div>
+                    <div class="cmp-stat"><span>Branches</span><strong t-esc="formatNumber(state.data.stats.branches)"/></div>
+                    <div class="cmp-stat"><span>Total Leads</span><strong t-esc="formatNumber(state.data.stats.leads)"/></div>
+                </div>
+
+                <div t-if="!state.data.profile_configured" class="alert alert-warning py-2">
+                    Configure the CRM Profile / Call Type field from Marketing → Configuration → Settings.
+                </div>
+                <div t-if="!state.data.source_configured" class="alert alert-warning py-2">
+                    Configure the CRM Source Field from Marketing → Configuration → Settings. Until configured, the dashboard uses Odoo's standard Source field.
+                </div>
+
+                <t t-foreach="state.data.matrices" t-as="matrix" t-key="matrix.key">
+                    <section class="cmp-card">
+                        <div class="cmp-card-header">
+                            <div><small>CRM Matrix Report</small><h2 t-esc="matrix.title"/></div>
+                            <div class="cmp-header-tools">
+                                <div class="cmp-legend">
+                                    <span>Baseline: <t t-esc="state.data.first_title"/></span>
+                                    <span>Target: <t t-esc="state.data.second_title"/></span>
+                                </div>
+                                <div t-if="matrix.key === 'source' || matrix.key === 'won_source'" class="cmp-scroll-controls">
+                                    <button type="button" class="cmp-scroll-btn" title="Scroll left" t-on-click="(ev) => this.scrollMatrix(ev, -1)"><i class="fa fa-chevron-left"/></button>
+                                    <span>Scroll sources</span>
+                                    <button type="button" class="cmp-scroll-btn" title="Scroll right" t-on-click="(ev) => this.scrollMatrix(ev, 1)"><i class="fa fa-chevron-right"/></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-att-class="'cmp-table-wrap ' + ((matrix.key === 'source' || matrix.key === 'won_source') ? 'cmp-table-wrap-wide' : 'cmp-table-wrap-fit')">
+                            <table t-att-class="'cmp-matrix-table o_list_table table table-sm table-bordered mb-0 ' + ((matrix.key === 'source' || matrix.key === 'won_source') ? 'cmp-table-wide' : 'cmp-table-fit')">
+                                <thead>
+                                    <tr>
+                                        <th class="cmp-sticky cmp-corner" rowspan="2">Branch Structure</th>
+                                        <t t-foreach="matrix.columns" t-as="column" t-key="column">
+                                            <th colspan="3" t-esc="column"/>
+                                        </t>
+                                        <th colspan="3" class="cmp-total-head">Aggregated Totals</th>
+                                    </tr>
+                                    <tr>
+                                        <t t-foreach="matrix.columns" t-as="column" t-key="column + '_sub'">
+                                            <th t-esc="state.data.first_title"/>
+                                            <th t-esc="state.data.second_title"/>
+                                            <th>Δ Variance</th>
+                                        </t>
+                                        <th>Baseline Total</th><th>Target Total</th><th>Net Delta</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-if="!matrix.branches.length"><td class="cmp-empty" t-att-colspan="matrix.columns.length * 3 + 4">No data found for these periods.</td></tr>
+                                    <t t-foreach="matrix.branches" t-as="branch" t-key="branch">
+                                        <tr>
+                                            <td class="cmp-sticky cmp-branch" t-esc="branch"/>
+                                            <t t-foreach="matrix.columns" t-as="column" t-key="branch + column">
+                                                <t t-set="current" t-value="cell(matrix, branch, column)"/>
+                                                <td t-esc="current.first ? formatNumber(current.first) : '-'"/>
+                                                <td class="cmp-target" t-esc="current.second ? formatNumber(current.second) : '-'"/>
+                                                <td t-att-class="diffClass(current.diff)" t-esc="(current.diff &gt; 0 ? '+' : '') + formatNumber(current.diff)"/>
+                                            </t>
+                                            <t t-set="bf" t-value="branchTotal(matrix, branch, 'first')"/>
+                                            <t t-set="bs" t-value="branchTotal(matrix, branch, 'second')"/>
+                                            <td class="cmp-row-total" t-esc="formatNumber(bf)"/>
+                                            <td class="cmp-row-total cmp-target" t-esc="formatNumber(bs)"/>
+                                            <td t-att-class="'cmp-row-total ' + diffClass(bs - bf)" t-esc="((bs - bf) &gt; 0 ? '+' : '') + formatNumber(bs - bf)"/>
+                                        </tr>
+                                    </t>
+                                    <tr t-if="matrix.branches.length" class="cmp-grand-row">
+                                        <td class="cmp-sticky">SYSTEM MATRIX TOTAL</td>
+                                        <t t-foreach="matrix.columns" t-as="column" t-key="column + '_total'">
+                                            <t t-set="cf" t-value="columnTotal(matrix, column, 'first')"/>
+                                            <t t-set="cs" t-value="columnTotal(matrix, column, 'second')"/>
+                                            <td t-esc="formatNumber(cf)"/><td t-esc="formatNumber(cs)"/>
+                                            <t t-set="cp" t-value="percentDiff(cf, cs)"/>
+                                            <td t-att-class="diffClass(cp)" t-esc="(cp &gt; 0 ? '+' : '') + formatMoney(cp) + '%'"/>
+                                        </t>
+                                        <t t-set="gf" t-value="grandTotal(matrix, 'first')"/>
+                                        <t t-set="gs" t-value="grandTotal(matrix, 'second')"/>
+                                        <td t-esc="formatNumber(gf)"/><td t-esc="formatNumber(gs)"/>
+                                        <t t-set="gp" t-value="percentDiff(gf, gs)"/>
+                                        <td t-att-class="diffClass(gp)" t-esc="(gp &gt; 0 ? '+' : '') + formatMoney(gp) + '%'"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </t>
+
+                <section class="cmp-card">
+                    <div class="cmp-card-header">
+                        <div><small>Marketing Spend Intelligence</small><h2>Source Platform Cost, CPL and Won CPL</h2></div>
+                    </div>
+                    <div class="cmp-table-wrap cmp-table-wrap-fit">
+                        <table class="cmp-matrix-table cmp-cost-table cmp-table-fit o_list_table table table-sm table-bordered mb-0">
+                            <thead>
+                                <tr><th class="cmp-sticky cmp-corner" rowspan="2">Source / Platform</th><th colspan="5" t-esc="state.data.first_title"/><th colspan="5" t-esc="state.data.second_title"/><th colspan="3">Delta</th></tr>
+                                <tr><th>Cost</th><th>Leads</th><th>Won</th><th>CPL</th><th>Cost / Won</th><th>Cost</th><th>Leads</th><th>Won</th><th>CPL</th><th>Cost / Won</th><th>Cost Δ</th><th>CPL Δ</th><th>Won CPL Δ</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr t-if="!state.data.marketing_rows.length"><td colspan="14" class="cmp-empty">No costs or source data found for these months.</td></tr>
+                                <tr t-foreach="state.data.marketing_rows" t-as="row" t-key="row.source + row.platform">
+                                    <td class="cmp-sticky cmp-branch"><strong t-esc="row.source"/><small t-esc="row.platform"/></td>
+                                    <td t-esc="formatMoney(row.first_cost)"/><td t-esc="formatNumber(row.first_leads)"/><td t-esc="formatNumber(row.first_won)"/><td t-esc="formatMoney(row.first_cpl)"/><td t-esc="formatMoney(row.first_cpwl)"/>
+                                    <td class="cmp-target" t-esc="formatMoney(row.second_cost)"/><td class="cmp-target" t-esc="formatNumber(row.second_leads)"/><td class="cmp-target" t-esc="formatNumber(row.second_won)"/><td class="cmp-target" t-esc="formatMoney(row.second_cpl)"/><td class="cmp-target" t-esc="formatMoney(row.second_cpwl)"/>
+                                    <td t-att-class="diffClass(row.cost_diff, true)" t-esc="(row.cost_diff &gt; 0 ? '+' : '') + formatMoney(row.cost_diff)"/>
+                                    <td t-att-class="diffClass(row.cpl_diff, true)" t-esc="(row.cpl_diff &gt; 0 ? '+' : '') + formatMoney(row.cpl_diff)"/>
+                                    <td t-att-class="diffClass(row.cpwl_diff, true)" t-esc="(row.cpwl_diff &gt; 0 ? '+' : '') + formatMoney(row.cpwl_diff)"/>
+                                </tr>
+                                <tr t-if="state.data.marketing_rows.length" class="cmp-grand-row">
+                                    <td class="cmp-sticky">SYSTEM MARKETING TOTAL</td>
+                                    <td t-esc="formatMoney(state.data.marketing_total.first_cost)"/>
+                                    <td t-esc="formatNumber(state.data.marketing_total.first_leads)"/>
+                                    <td t-esc="formatNumber(state.data.marketing_total.first_won)"/>
+                                    <td t-esc="formatMoney(state.data.marketing_total.first_cpl)"/>
+                                    <td t-esc="formatMoney(state.data.marketing_total.first_cpwl)"/>
+                                    <td t-esc="formatMoney(state.data.marketing_total.second_cost)"/>
+                                    <td t-esc="formatNumber(state.data.marketing_total.second_leads)"/>
+                                    <td t-esc="formatNumber(state.data.marketing_total.second_won)"/>
+                                    <td t-esc="formatMoney(state.data.marketing_total.second_cpl)"/>
+                                    <td t-esc="formatMoney(state.data.marketing_total.second_cpwl)"/>
+                                    <td t-att-class="diffClass(state.data.marketing_total.cost_diff, true)" t-esc="(state.data.marketing_total.cost_diff &gt; 0 ? '+' : '') + formatMoney(state.data.marketing_total.cost_diff)"/>
+                                    <td t-att-class="diffClass(state.data.marketing_total.cpl_diff, true)" t-esc="(state.data.marketing_total.cpl_diff &gt; 0 ? '+' : '') + formatMoney(state.data.marketing_total.cpl_diff)"/>
+                                    <td t-att-class="diffClass(state.data.marketing_total.cpwl_diff, true)" t-esc="(state.data.marketing_total.cpwl_diff &gt; 0 ? '+' : '') + formatMoney(state.data.marketing_total.cpwl_diff)"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </t>
+            </t>
+            <t t-else="">
+                <SalesAccessDashboard/>
+            </t>
+        </div>
+    </t>
+</templates>

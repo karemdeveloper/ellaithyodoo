@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="model_x_compare_marketing_cost" model="ir.model">
+        <field name="name">Marketing Cost</field>
+        <field name="model">x_compare.marketing.cost</field>
+    </record>
+    <record id="field_x_compare_marketing_cost_x_name" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/>
+        <field name="name">x_name</field><field name="field_description">Description</field><field name="ttype">char</field><field name="required" eval="True"/>
+    </record>
+    <record id="field_x_compare_marketing_cost_x_source_id" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/><field name="name">x_source_id</field><field name="field_description">Legacy Odoo Source</field><field name="ttype">many2one</field><field name="relation">utm.source</field><field name="required" eval="False"/><field name="on_delete" eval="'restrict'"/>
+    </record>
+    <record id="field_x_compare_marketing_cost_x_source_name" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/><field name="name">x_source_name</field><field name="field_description">Source</field><field name="ttype">char</field>
+    </record>
+    <record id="field_x_compare_marketing_cost_x_platform_name" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/><field name="name">x_platform_name</field><field name="field_description">Platform / Company</field><field name="ttype">char</field><field name="required" eval="True"/>
+    </record>
+    <record id="field_x_compare_marketing_cost_x_cost_year" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/><field name="name">x_cost_year</field><field name="field_description">Year</field><field name="ttype">integer</field><field name="required" eval="True"/>
+    </record>
+    <record id="field_x_compare_marketing_cost_x_cost_month" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/><field name="name">x_cost_month</field><field name="field_description">Month</field><field name="ttype">selection</field><field name="required" eval="True"/>
+    </record>
+    <record id="selection_cost_month_1" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">January</field><field name="value">1</field><field name="sequence">1</field></record>
+    <record id="selection_cost_month_2" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">February</field><field name="value">2</field><field name="sequence">2</field></record>
+    <record id="selection_cost_month_3" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">March</field><field name="value">3</field><field name="sequence">3</field></record>
+    <record id="selection_cost_month_4" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">April</field><field name="value">4</field><field name="sequence">4</field></record>
+    <record id="selection_cost_month_5" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">May</field><field name="value">5</field><field name="sequence">5</field></record>
+    <record id="selection_cost_month_6" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">June</field><field name="value">6</field><field name="sequence">6</field></record>
+    <record id="selection_cost_month_7" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">July</field><field name="value">7</field><field name="sequence">7</field></record>
+    <record id="selection_cost_month_8" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">August</field><field name="value">8</field><field name="sequence">8</field></record>
+    <record id="selection_cost_month_9" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">September</field><field name="value">9</field><field name="sequence">9</field></record>
+    <record id="selection_cost_month_10" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">October</field><field name="value">10</field><field name="sequence">10</field></record>
+    <record id="selection_cost_month_11" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">November</field><field name="value">11</field><field name="sequence">11</field></record>
+    <record id="selection_cost_month_12" model="ir.model.fields.selection"><field name="field_id" ref="field_x_compare_marketing_cost_x_cost_month"/><field name="name">December</field><field name="value">12</field><field name="sequence">12</field></record>
+    <record id="field_x_compare_marketing_cost_x_cost" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/><field name="name">x_cost</field><field name="field_description">Cost</field><field name="ttype">float</field><field name="required" eval="True"/>
+    </record>
+    <record id="field_x_compare_marketing_cost_x_currency_id" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/><field name="name">x_currency_id</field><field name="field_description">Currency</field><field name="ttype">many2one</field><field name="relation">res.currency</field><field name="required" eval="True"/><field name="on_delete" eval="'restrict'"/>
+    </record>
+    <record id="field_x_compare_marketing_cost_x_notes" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/><field name="name">x_notes</field><field name="field_description">Notes</field><field name="ttype">text</field>
+    </record>
+    <record id="field_x_compare_marketing_cost_x_company_id" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_marketing_cost"/><field name="name">x_company_id</field><field name="field_description">Company</field><field name="ttype">many2one</field><field name="relation">res.company</field><field name="required" eval="True"/><field name="on_delete" eval="'restrict'"/>
+    </record>
+
+    <record id="model_x_compare_source_merge_group" model="ir.model">
+        <field name="name">Marketing Source Merge Group</field><field name="model">x_compare.source.merge.group</field>
+    </record>
+    <record id="field_x_compare_source_merge_group_x_name" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_source_merge_group"/><field name="name">x_name</field><field name="field_description">Merged Source Name</field><field name="ttype">char</field><field name="required" eval="True"/>
+    </record>
+    <record id="field_x_compare_source_merge_group_x_source_ids" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_source_merge_group"/><field name="name">x_source_ids</field><field name="field_description">Legacy Odoo Sources</field><field name="ttype">many2many</field><field name="relation">utm.source</field>
+    </record>
+    <record id="field_x_compare_source_merge_group_x_source_names" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_source_merge_group"/><field name="name">x_source_names</field><field name="field_description">Sources</field><field name="ttype">text</field>
+    </record>
+    <record id="field_x_compare_source_merge_group_x_company_id" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_source_merge_group"/><field name="name">x_company_id</field><field name="field_description">Company</field><field name="ttype">many2one</field><field name="relation">res.company</field><field name="required" eval="True"/><field name="on_delete" eval="'restrict'"/>
+    </record>
+    <record id="field_x_compare_source_merge_group_x_active" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_source_merge_group"/><field name="name">x_active</field><field name="field_description">Active</field><field name="ttype">boolean</field>
+    </record>
+
+    <record id="model_x_compare_configuration" model="ir.model">
+        <field name="name">Marketing Configuration</field><field name="model">x_compare.configuration</field>
+    </record>
+    <record id="field_x_compare_configuration_x_name" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_configuration"/><field name="name">x_name</field><field name="field_description">Configuration Name</field><field name="ttype">char</field><field name="required" eval="True"/>
+    </record>
+    <record id="field_x_compare_configuration_x_branch_field_id" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_configuration"/><field name="name">x_branch_field_id</field><field name="field_description">CRM Branch Field</field><field name="ttype">many2one</field><field name="relation">ir.model.fields</field><field name="domain">[("model", "=", "crm.lead"), ("ttype", "in", ["char", "selection", "many2one"])]</field>
+    </record>
+    <record id="field_x_compare_configuration_x_profile_field_id" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_configuration"/><field name="name">x_profile_field_id</field><field name="field_description">CRM Profile / Call Type Field</field><field name="ttype">many2one</field><field name="relation">ir.model.fields</field><field name="domain">[("model", "=", "crm.lead"), ("ttype", "in", ["char", "selection", "many2one"])]</field>
+    </record>
+    <record id="field_x_compare_configuration_x_source_field_id" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_configuration"/><field name="name">x_source_field_id</field><field name="field_description">CRM Source Field</field><field name="ttype">many2one</field><field name="relation">ir.model.fields</field><field name="domain">[("model", "=", "crm.lead"), ("ttype", "in", ["char", "selection", "many2one"])]</field>
+    </record>
+    <record id="field_x_compare_configuration_x_exclude_walk_in" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_configuration"/><field name="name">x_exclude_walk_in</field><field name="field_description">Exclude Walk-in from Won by Source</field><field name="ttype">boolean</field>
+    </record>
+    <record id="field_x_compare_configuration_x_walk_in_text" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_configuration"/><field name="name">x_walk_in_text</field><field name="field_description">Walk-in Match Text</field><field name="ttype">char</field>
+    </record>
+    <record id="field_x_compare_configuration_x_company_id" model="ir.model.fields">
+        <field name="model_id" ref="model_x_compare_configuration"/><field name="name">x_company_id</field><field name="field_description">Company</field><field name="ttype">many2one</field><field name="relation">res.company</field><field name="required" eval="True"/><field name="on_delete" eval="'restrict'"/>
+    </record>
+</odoo>

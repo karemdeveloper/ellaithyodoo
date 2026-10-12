@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+ <menuitem id="menu_compare_root" name="Marketing" sequence="65" groups="group_compare_user" web_icon="compare_module_importable,static/description/icon.png"/>
+ <menuitem id="menu_compare_dashboard" name="Marketing Dashboard" parent="menu_compare_root" action="action_compare_dashboard" sequence="10" groups="group_compare_user"/>
+ <menuitem id="menu_sales_access_dashboard" name="My Sales Dashboard" parent="menu_compare_root" action="action_sales_access_dashboard" sequence="20" groups="group_compare_user"/>
+ <menuitem id="menu_compare_configuration_root" name="Configuration" parent="menu_compare_root" sequence="90" groups="group_compare_cost_manager"/>
+ <menuitem id="menu_compare_cost" name="Marketing Costs" parent="menu_compare_configuration_root" action="action_x_compare_marketing_cost" sequence="10" groups="group_compare_cost_manager"/>
+ <menuitem id="menu_compare_merge" name="Source Merge Groups" parent="menu_compare_configuration_root" action="action_x_compare_source_merge_group" sequence="20" groups="group_compare_manager"/>
+ <menuitem id="menu_compare_settings" name="Settings" parent="menu_compare_configuration_root" action="action_x_compare_configuration" sequence="30" groups="group_compare_manager"/>
+</odoo>

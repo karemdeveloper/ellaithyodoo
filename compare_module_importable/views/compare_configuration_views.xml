@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+ <record id="view_x_compare_configuration_list" model="ir.ui.view"><field name="name">x.compare.configuration.list</field><field name="model">x_compare.configuration</field><field name="arch" type="xml"><list string="Marketing Configuration"><field name="x_name"/><field name="x_company_id"/><field name="x_branch_field_id"/><field name="x_profile_field_id"/><field name="x_source_field_id"/><field name="x_exclude_walk_in"/></list></field></record>
+ <record id="view_x_compare_configuration_form" model="ir.ui.view"><field name="name">x.compare.configuration.form</field><field name="model">x_compare.configuration</field><field name="arch" type="xml"><form string="Marketing Configuration"><sheet><group><field name="x_name"/><field name="x_company_id"/><field name="x_branch_field_id" options="{'no_create': True}"/><field name="x_profile_field_id" options="{'no_create': True}"/><field name="x_source_field_id" options="{'no_create': True}"/><field name="x_exclude_walk_in"/><field name="x_walk_in_text" placeholder="walk-in"/></group></sheet></form></field></record>
+ <record id="action_x_compare_configuration" model="ir.actions.act_window"><field name="name">Settings</field><field name="res_model">x_compare.configuration</field><field name="view_mode">list,form</field></record>
+</odoo>

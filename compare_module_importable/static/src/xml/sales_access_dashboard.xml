@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compare_module.SalesAccessDashboard">
+        <div class="o_sales_access_dashboard">
+            <div class="cmp-page-header">
+                <div>
+                    <h1>Sales Charts</h1>
+                    <p>CRM charts and operational data based on the teams and opportunities you are allowed to access.</p>
+                </div>
+                <button class="btn btn-primary" type="button" t-on-click="applyFilters">
+                    <i class="fa fa-refresh me-1"/> Refresh
+                </button>
+            </div>
+
+            <section class="cmp-filter-card">
+                <div class="cmp-filter-title">Dashboard Filters</div>
+                <div class="sales-filter-grid">
+                    <div>
+                        <label>Period</label>
+                        <select class="form-select" t-model.number="state.periodMonths">
+                            <option t-foreach="periodOptions" t-as="option" t-key="option[0]" t-att-value="option[0]" t-esc="option[1]"/>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Sales Team</label>
+                        <select class="form-select" t-model="state.teamId">
+                            <option value="all">All accessible teams</option>
+                            <option t-foreach="state.data?.teams || []" t-as="team" t-key="team.id" t-att-value="team.id" t-esc="team.name"/>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Salesperson</label>
+                        <select class="form-select" t-model="state.userId">
+                            <option value="all">All accessible salespeople</option>
+                            <option t-foreach="state.data?.users || []" t-as="user" t-key="user.id" t-att-value="user.id" t-esc="user.name"/>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" type="button" t-on-click="applyFilters">Apply</button>
+                </div>
+            </section>
+
+            <div t-if="state.loading" class="cmp-loading"><i class="fa fa-spinner fa-spin me-1"/> Loading sales data...</div>
+            <t t-elif="state.data">
+                <div class="sales-access-note"><i class="fa fa-lock me-1"/><t t-esc="state.data.accessNote"/></div>
+
+                <div class="sales-kpi-grid">
+                    <div class="sales-kpi"><span>Total Leads</span><strong t-esc="formatNumber(state.data.metrics.total)"/></div>
+                    <div class="sales-kpi"><span>Open Pipeline</span><strong t-esc="formatNumber(state.data.metrics.open)"/></div>
+                    <div class="sales-kpi"><span>Won</span><strong t-esc="formatNumber(state.data.metrics.won)"/></div>
+                    <div class="sales-kpi"><span>Lost</span><strong t-esc="formatNumber(state.data.metrics.lost)"/></div>
+                    <div class="sales-kpi"><span>Conversion Rate</span><strong t-esc="formatPercent(state.data.metrics.conversionRate)"/></div>
+                    <div class="sales-kpi"><span>Expected Revenue</span><strong t-esc="formatMoney(state.data.metrics.expectedRevenue)"/></div>
+                    <div class="sales-kpi"><span>Weighted Revenue</span><strong t-esc="formatMoney(state.data.metrics.weightedRevenue)"/></div>
+                    <div class="sales-kpi sales-kpi-alert"><span>Overdue Opportunities</span><strong t-esc="formatNumber(state.data.metrics.overdue)"/></div>
+                </div>
+
+                <div class="sales-chart-grid">
+                    <section class="cmp-card sales-chart-card sales-chart-wide">
+                        <div class="cmp-card-header"><div><small>Trend</small><h2>Monthly Leads and Won Opportunities</h2></div></div>
+                        <div class="sales-column-chart">
+                            <div t-foreach="state.data.monthly" t-as="row" t-key="row.key" class="sales-column-group">
+                                <div class="sales-column-area">
+                                    <div class="sales-column sales-column-leads" t-att-style="'height:' + barHeight(row.leads)" t-att-title="'Leads: ' + row.leads"/>
+                                    <div class="sales-column sales-column-won" t-att-style="'height:' + barHeight(row.won)" t-att-title="'Won: ' + row.won"/>
+                                </div>
+                                <strong><t t-esc="formatNumber(row.leads)"/> / <t t-esc="formatNumber(row.won)"/></strong>
+                                <span t-esc="row.label"/>
+                            </div>
+                        </div>
+                        <div class="sales-chart-legend"><span><i class="legend-leads"/> Leads</span><span><i class="legend-won"/> Won</span></div>
+                    </section>
+
+                    <section class="cmp-card sales-chart-card">
+                        <div class="cmp-card-header"><div><small>Pipeline</small><h2>Stage Distribution</h2></div></div>
+                        <div class="sales-horizontal-chart">
+                            <div t-foreach="state.data.stageRows" t-as="row" t-key="row.name" class="sales-bar-row">
+                                <div class="sales-bar-label"><span t-esc="row.name"/><strong t-esc="formatNumber(row.leads)"/></div>
+                                <div class="sales-bar-track"><div class="sales-bar-fill" t-att-style="'width:' + barWidth(row.leads, state.data.stageMax)"/></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="cmp-card sales-chart-card">
+                        <div class="cmp-card-header"><div><small>Acquisition</small><h2>Top Lead Sources</h2></div></div>
+                        <div class="sales-horizontal-chart">
+                            <div t-foreach="state.data.sourceRows" t-as="row" t-key="row.name" class="sales-bar-row">
+                                <div class="sales-bar-label"><span t-esc="row.name"/><strong t-esc="formatNumber(row.leads)"/></div>
+                                <div class="sales-bar-track"><div class="sales-bar-fill sales-bar-source" t-att-style="'width:' + barWidth(row.leads, state.data.sourceMax)"/></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="cmp-card">
+                    <div class="cmp-card-header"><div><small>Team Results</small><h2>Sales Team Performance</h2></div></div>
+                    <div class="cmp-table-wrap cmp-table-wrap-fit">
+                        <table class="o_list_table table table-sm mb-0 sales-performance-table">
+                            <thead><tr><th>Sales Team</th><th>Leads</th><th>Open</th><th>Won</th><th>Conversion</th><th>Open Revenue</th></tr></thead>
+                            <tbody>
+                                <tr t-if="!state.data.teamRows.length"><td colspan="6" class="cmp-empty">No accessible team data found.</td></tr>
+                                <tr t-foreach="state.data.teamRows" t-as="row" t-key="row.name">
+                                    <td><strong t-esc="row.name"/></td><td t-esc="formatNumber(row.leads)"/><td t-esc="formatNumber(row.open)"/><td t-esc="formatNumber(row.won)"/><td t-esc="formatPercent(row.conversion)"/><td t-esc="formatMoney(row.revenue)"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="cmp-card">
+                    <div class="cmp-card-header"><div><small>Individual Results</small><h2>Salesperson Performance</h2></div></div>
+                    <div class="cmp-table-wrap cmp-table-wrap-fit">
+                        <table class="o_list_table table table-sm mb-0 sales-performance-table">
+                            <thead><tr><th>Salesperson</th><th>Leads</th><th>Open</th><th>Won</th><th>Conversion</th><th>Open Revenue</th></tr></thead>
+                            <tbody>
+                                <tr t-if="!state.data.salespersonRows.length"><td colspan="6" class="cmp-empty">No accessible salesperson data found.</td></tr>
+                                <tr t-foreach="state.data.salespersonRows" t-as="row" t-key="row.name">
+                                    <td><strong t-esc="row.name"/></td><td t-esc="formatNumber(row.leads)"/><td t-esc="formatNumber(row.open)"/><td t-esc="formatNumber(row.won)"/><td t-esc="formatPercent(row.conversion)"/><td t-esc="formatMoney(row.revenue)"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </t>
+        </div>
+    </t>
+</templates>
