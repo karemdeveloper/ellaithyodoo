@@ -40,6 +40,7 @@ class LeadMixin(models.AbstractModel):
                     "name": f"{record.first_name} {record.last_name}",
                     "phone": normalized_phone,
                     "email": record.email,
+                    "customer_rank": 1,
                 }
             )
 
@@ -135,6 +136,7 @@ class LeadMixin(models.AbstractModel):
                     "name": f"{record.first_name} {record.last_name}",
                     "phone": normalized_phone,
                     "email": record.email,
+                    "customer_rank": 1,
                 }
             )
 
