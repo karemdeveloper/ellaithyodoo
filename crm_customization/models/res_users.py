@@ -38,7 +38,16 @@ class ResUsers(models.Model):
             archived_user.name, len(open_leads)
         )
 
-        # 2. Redistribute each lead
+        # 2. Archive the user first so the distribution below skips them.
+        #    Their sales team memberships are archived too (as Odoo's own
+        #    Archive action does). action_archive() is avoided on purpose:
+        #    mail's override would delete every activity assigned to the user.
+        self.env['crm.team.member'].sudo().search([
+            ('user_id', '=', archived_user.id),
+        ]).action_archive()
+        archived_user.write({'active': False})
+
+        # 3. Redistribute each lead
         reassigned_count = 0
         for lead in open_leads:
             branch_id = lead.branch_name.id if lead.branch_name else False
@@ -70,6 +79,9 @@ class ResUsers(models.Model):
             new_name = new_salesperson.name
 
             lead.write({'user_id': new_salesperson.id})
+            # Keep the customer with the salesperson now owning their opportunity
+            if lead.partner_id.user_id == archived_user:
+                lead.partner_id.write({'user_id': new_salesperson.id})
             lead.message_post(
                 body=_(
                     "Salesperson changed from <b>%s</b> to <b>%s</b> "
@@ -83,10 +95,18 @@ class ResUsers(models.Model):
                 lead.id, old_name, new_name
             )
 
-        # 3. Archive the user
-        archived_user.write({'active': False})
+        # 4. Clear the archived salesperson from their remaining customers so
+        #    their next opportunity goes through the distribution logic.
+        remaining_partners = self.env['res.partner'].sudo().search([
+            ('user_id', '=', archived_user.id),
+        ])
+        remaining_partners.write({'user_id': False})
+        _logger.info(
+            "Salesperson %s cleared from %s remaining customer(s).",
+            archived_user.name, len(remaining_partners)
+        )
 
-        # 4. Archive the linked contact (partner) if still active
+        # 5. Archive the linked contact (partner) if still active
         if archived_user.partner_id and archived_user.partner_id.active:
             archived_user.partner_id.sudo().write({'active': False})
             _logger.info(
@@ -99,7 +119,7 @@ class ResUsers(models.Model):
             archived_user.name, reassigned_count, len(open_leads)
         )
 
-        # 5. Show result notification
+        # 6. Show result notification
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',

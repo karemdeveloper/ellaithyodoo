@@ -145,6 +145,20 @@ class DistributeSequence(models.Model):
         else:
             next_seq = sequences[0]
 
+        # 8b. Archived salesperson → next one in turn takes it
+        if not next_seq.sales_person.active:
+            start = valid_ids.index(next_seq.id)
+            for offset in range(1, len(valid_ids)):
+                candidate = sequences[(start + offset) % len(valid_ids)]
+                if candidate.sales_person.active:
+                    _logger.info("Salesperson %s is archived → turn goes to %s",
+                                 next_seq.sales_person.name, candidate.sales_person.name)
+                    next_seq = candidate
+                    break
+            else:
+                _logger.info("All salespersons in the sequences are archived.")
+                return False
+
         # 9. Safety check
         if not next_seq.sales_person:
             _logger.warning("Sequence %s has no salesperson → searching alternative",

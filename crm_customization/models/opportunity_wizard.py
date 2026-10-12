@@ -218,6 +218,22 @@ class OpportunityWizard(models.TransientModel):
             next_seq = sequences[0]
 
         # =========================================================
+        # ⭐ ARCHIVED SALESPERSON → next one in turn takes it
+        # =========================================================
+        if not next_seq.sales_person.active:
+            start = valid_ids.index(next_seq.id)
+            for offset in range(1, len(valid_ids)):
+                candidate = sequences[(start + offset) % len(valid_ids)]
+                if candidate.sales_person.active:
+                    _logger.info("Salesperson %s is archived → turn goes to %s",
+                                 next_seq.sales_person.name, candidate.sales_person.name)
+                    next_seq = candidate
+                    break
+            else:
+                _logger.info("All salespersons in the sequences are archived.")
+                return False
+
+        # =========================================================
         # ⭐ SAFETY CHECK
         # =========================================================
         if not next_seq.sales_person:
@@ -269,8 +285,9 @@ class OpportunityWizard(models.TransientModel):
                         "Cannot add opportunity. Customer already has an open opportunity."
                     )
 
-        # Check if partner already has a salesperson assigned
-        if self.partner_id.user_id:
+        # Reuse the partner's salesperson only while that user is still active;
+        # an archived salesperson falls through to the distribution logic.
+        if self.partner_id.user_id and self.partner_id.user_id.active:
             # Use the existing salesperson from partner
             salesperson = self.partner_id.user_id
             _logger.info("Partner id=%s already has salesperson id=%s. Reusing existing assignment.", 
