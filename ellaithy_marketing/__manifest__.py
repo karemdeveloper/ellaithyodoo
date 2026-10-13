@@ -13,9 +13,9 @@
         'views/marketing_menus.xml',
     ],
     'assets': {'web.assets_backend': [
-        'ellaithy_marketing_python/static/src/js/marketing_dashboard.js',
-        'ellaithy_marketing_python/static/src/xml/marketing_dashboard.xml',
-        'ellaithy_marketing_python/static/src/scss/marketing_dashboard.scss',
+        'ellaithy_marketing/static/src/js/marketing_dashboard.js',
+        'ellaithy_marketing/static/src/xml/marketing_dashboard.xml',
+        'ellaithy_marketing/static/src/scss/marketing_dashboard.scss',
     ]},
     'application': True,
     'installable': True,
