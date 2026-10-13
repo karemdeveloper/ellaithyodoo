@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="ellaithy_marketing.MarketingCompare">
+<div class="o_marketing_compare p-3" style="overflow:auto;height:100%;background:#f7f8fb">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div><h2 class="mb-1">Marketing Monthly Comparison</h2><div class="text-muted">Compare baseline and target periods across sources, branches, campaigns and sales performance</div></div>
+        <div class="d-flex gap-2"><button class="btn btn-outline-secondary" t-on-click="exportCsv" t-att-disabled="!state.target">Export CSV</button><button class="btn btn-primary" t-on-click="refresh" t-att-disabled="state.loading">Apply Filters / Refresh</button></div>
+    </div>
+    <div class="card p-3 mb-3">
+        <h5>Compare Filters &amp; Statistics</h5>
+        <div class="row g-2">
+            <div class="col-6 col-md-3"><label>Baseline Month</label><select class="form-select" t-on-change="(e)=>this.set(e,'baselineMonth')"><t t-foreach="months" t-as="m" t-key="m.id"><option t-att-value="m.id" t-att-selected="selected(state.baselineMonth,m.id)" t-esc="m.name"/></t></select></div>
+            <div class="col-6 col-md-3"><label>Baseline Year</label><select class="form-select" t-on-change="(e)=>this.set(e,'baselineYear')"><t t-foreach="years" t-as="y" t-key="y"><option t-att-value="y" t-att-selected="selected(state.baselineYear,y)" t-esc="y"/></t></select></div>
+            <div class="col-6 col-md-3"><label>Target Month</label><select class="form-select" t-on-change="(e)=>this.set(e,'targetMonth')"><t t-foreach="months" t-as="m" t-key="m.id"><option t-att-value="m.id" t-att-selected="selected(state.targetMonth,m.id)" t-esc="m.name"/></t></select></div>
+            <div class="col-6 col-md-3"><label>Target Year</label><select class="form-select" t-on-change="(e)=>this.set(e,'targetYear')"><t t-foreach="years" t-as="y" t-key="y"><option t-att-value="y" t-att-selected="selected(state.targetYear,y)" t-esc="y"/></t></select></div>
+            <div class="col-6 col-md-3"><label>Company</label><select class="form-select" t-on-change="(e)=>this.set(e,'company_id')"><option value="">Current Company</option><t t-foreach="state.filters.companies || []" t-as="v" t-key="v.id"><option t-att-value="v.id" t-att-selected="selected(state.company_id,v.id)" t-esc="v.name"/></t></select></div>
+            <div class="col-6 col-md-3"><label>Marketing Source</label><select class="form-select" t-on-change="(e)=>this.set(e,'source_id')"><option value="">All Sources</option><t t-foreach="state.filters.sources || []" t-as="v" t-key="v.id"><option t-att-value="v.id" t-att-selected="selected(state.source_id,v.id)" t-esc="v.name"/></t></select></div>
+            <div class="col-6 col-md-3"><label>Campaign</label><select class="form-select" t-on-change="(e)=>this.set(e,'campaign_id')"><option value="">All Campaigns</option><t t-foreach="state.filters.campaigns || []" t-as="v" t-key="v.id"><option t-att-value="v.id" t-att-selected="selected(state.campaign_id,v.id)" t-esc="v.name"/></t></select></div>
+            <div class="col-6 col-md-3"><label>Sales Team</label><select class="form-select" t-on-change="(e)=>this.set(e,'team_id')"><option value="">All Teams</option><t t-foreach="state.filters.teams || []" t-as="v" t-key="v.id"><option t-att-value="v.id" t-att-selected="selected(state.team_id,v.id)" t-esc="v.name"/></t></select></div>
+            <div class="col-6 col-md-3"><label>Salesperson</label><select class="form-select" t-on-change="(e)=>this.set(e,'user_id')"><option value="">All Salespeople</option><t t-foreach="state.filters.users || []" t-as="v" t-key="v.id"><option t-att-value="v.id" t-att-selected="selected(state.user_id,v.id)" t-esc="v.name"/></t></select></div>
+            <div class="col-6 col-md-3"><label>CRM Stage</label><select class="form-select" t-on-change="(e)=>this.set(e,'stage_id')"><option value="">All Stages</option><t t-foreach="state.filters.stages || []" t-as="v" t-key="v.id"><option t-att-value="v.id" t-att-selected="selected(state.stage_id,v.id)" t-esc="v.name"/></t></select></div>
+            <div class="col-6 col-md-3"><label>Lead Type</label><select class="form-select" t-on-change="(e)=>this.set(e,'lead_type')"><option value="">All Types</option><option value="lead" t-att-selected="selected(state.lead_type,'lead')">Lead</option><option value="opportunity" t-att-selected="selected(state.lead_type,'opportunity')">Opportunity</option></select></div>
+            <div class="col-6 col-md-3"><label>Compare By</label><select class="form-select" t-on-change="(e)=>this.set(e,'dimension')"><t t-foreach="dimensions" t-as="d" t-key="d.id"><option t-att-value="d.id" t-att-selected="selected(state.dimension,d.id)" t-esc="d.name"/></t></select></div>
+        </div>
+    </div>
+    <t t-if="state.loading"><div class="alert alert-info">Loading comparison...</div></t>
+    <t t-if="state.error"><div class="alert alert-danger" t-esc="state.error"/></t>
+    <t t-if="state.baseline &amp;&amp; state.target">
+        <div class="row g-3 mb-3">
+            <t t-foreach="[{key:'leads',label:'Leads'},{key:'won',label:'Won'},{key:'lost',label:'Lost'},{key:'spend',label:'Marketing Spend'},{key:'conversion',label:'Conversion %'},{key:'cpl',label:'Cost per Lead'},{key:'cost_per_won',label:'Cost per Won'}]" t-as="k" t-key="k.key">
+                <div class="col-6 col-md-4 col-xl-3"><div class="card p-3 h-100">
+                    <div class="text-muted" t-esc="k.label"/><div class="d-flex justify-content-between mt-2"><div><small>Baseline</small><h5 t-esc="num(metric(k.key).first)"/></div><div><small>Target</small><h5 t-esc="num(metric(k.key).second)"/></div></div>
+                    <div t-att-class="metric(k.key).delta &gt;= 0 ? 'text-success' : 'text-danger'"><t t-esc="num(metric(k.key).delta)"/> change</div>
+                </div></div>
+            </t>
+        </div>
+        <div class="card p-3 mb-3">
+            <div class="d-flex justify-content-between flex-wrap gap-2 align-items-center mb-2"><h5 class="mb-0">Comparison Matrix — <t t-esc="dimensions.find(d=>d.id===state.dimension)?.name"/></h5><input class="form-control" style="max-width:270px" placeholder="Search matrix..." t-att-value="state.search" t-on-input="(e)=>this.set(e,'search')"/></div>
+            <div class="table-responsive"><table class="table table-hover table-sm align-middle"><thead><tr><th>Dimension</th><th>Baseline Leads</th><th>Target Leads</th><th>Change</th><th>Baseline Won</th><th>Target Won</th><th>Won Change</th><th>Baseline Lost</th><th>Target Lost</th><th>Baseline Conversion</th><th>Target Conversion</th></tr></thead>
+            <tbody><t t-foreach="rows" t-as="r" t-key="r.name"><tr><td t-esc="r.name"/><td t-esc="num(r.first)"/><td t-esc="num(r.second)"/><td t-esc="num(r.second-r.first)"/><td t-esc="num(r.wonFirst)"/><td t-esc="num(r.wonSecond)"/><td t-esc="num(r.wonSecond-r.wonFirst)"/><td t-esc="num(r.lostFirst)"/><td t-esc="num(r.lostSecond)"/><td t-esc="pct(r.wonFirst,r.first)"/><td t-esc="pct(r.wonSecond,r.second)"/></tr></t></tbody></table></div>
+        </div>
+        <div class="row g-3">
+            <t t-foreach="[{title:'Source Comparison',rows:sourceRows},{title:'Branch Comparison',rows:branchRows}]" t-as="section" t-key="section.title">
+                <div class="col-12 col-xl-6"><div class="card p-3"><h5 t-esc="section.title"/><div class="table-responsive" style="max-height:430px;overflow:auto"><table class="table table-sm"><thead><tr><th>Name</th><th>Baseline</th><th>Target</th><th>Won (Baseline)</th><th>Won (Target)</th></tr></thead><tbody><t t-foreach="section.rows" t-as="r" t-key="r.name"><tr><td t-esc="r.name"/><td t-esc="num(r.first)"/><td t-esc="num(r.second)"/><td t-esc="num(r.wonFirst)"/><td t-esc="num(r.wonSecond)"/></tr></t></tbody></table></div></div></div>
+            </t>
+        </div>
+        <p class="text-muted mt-3">Leads are grouped by creation month. Won and lost values reflect current CRM status, not the historical status at month-end. Spend is calculated from Marketing Costs and uses the selected company's currency.</p>
+    </t>
+</div>
+</t>
+</templates>

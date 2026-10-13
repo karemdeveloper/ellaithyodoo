@@ -29,6 +29,7 @@ export class MarketingDashboard extends Component {
         } catch (error) { this.notification.add(error.message || 'Marketing analytics could not be loaded', {type:'danger'}); }
         finally { this.state.loading = false; }
     }
+    isSelected(current, optionId) { return String(current ?? "") === String(optionId); }
     setFilter(ev, key) { this.state[key] = ev.target.value; }
     max(rows, field) { return Math.max(1, ...(rows || []).map(r => Number(r[field] || 0))); }
     width(value, maximum) { return `${Math.min(100, Math.max(0, Number(value || 0) / maximum * 100))}%`; }

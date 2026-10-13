@@ -1,6 +1,7 @@
 <odoo>
  <menuitem id="menu_marketing_root" name="Marketing" sequence="50" groups="group_marketing_user" web_icon="ellaithy_marketing,static/description/icon.png"/>
  <menuitem id="menu_marketing_dashboard" name="Analytics Dashboard" parent="menu_marketing_root" action="action_marketing_dashboard" sequence="1" groups="group_marketing_user"/>
+ <menuitem id="menu_marketing_compare" name="Monthly Comparison" parent="menu_marketing_root" action="action_marketing_compare" sequence="2" groups="group_marketing_user"/>
  <menuitem id="menu_marketing_cost" name="Marketing Costs" parent="menu_marketing_root" action="action_marketing_cost" sequence="10" groups="group_marketing_user"/>
  <menuitem id="menu_marketing_configuration" name="Configuration" parent="menu_marketing_root" sequence="90" groups="group_marketing_admin"/>
  <menuitem id="menu_marketing_source_groups" name="Source Merge Groups" parent="menu_marketing_configuration" action="action_marketing_source_group" sequence="1" groups="group_marketing_admin"/>
