@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_marketing_cost_user,marketing.cost.user,model_ellaithy_marketing_cost,group_marketing_user,1,0,0,0
+access_marketing_cost_manager,marketing.cost.manager,model_ellaithy_marketing_cost,group_marketing_cost,1,1,1,1
+access_marketing_group_user,marketing.group.user,model_ellaithy_marketing_source_group,group_marketing_user,1,0,0,0
+access_marketing_group_admin,marketing.group.admin,model_ellaithy_marketing_source_group,group_marketing_admin,1,1,1,1
+access_marketing_settings_user,marketing.settings.user,model_ellaithy_marketing_settings,group_marketing_user,1,0,0,0
+access_marketing_settings_admin,marketing.settings.admin,model_ellaithy_marketing_settings,group_marketing_admin,1,1,1,1

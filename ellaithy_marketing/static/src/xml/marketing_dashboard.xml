@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="ellaithy_marketing_python.MarketingDashboard">
+ <div class="o_em_dashboard o_action" style="height:100%;overflow:auto">
+  <header class="em_head"><div><h2>Marketing Intelligence</h2><p>Lead acquisition, marketing attribution, conversions, and spend</p></div><button class="btn btn-primary" t-on-click="refresh" t-att-disabled="state.loading">Refresh</button></header>
+  <div class="em_filters">
+   <div><label>From</label><input class="form-control" type="date" t-att-value="state.date_from" t-on-change="(ev) => this.setFilter(ev,'date_from')"/></div>
+   <div><label>To</label><input class="form-control" type="date" t-att-value="state.date_to" t-on-change="(ev) => this.setFilter(ev,'date_to')"/></div>
+   <t t-foreach="[{key:'company_id',label:'Company',items:'companies'},{key:'source_id',label:'Source',items:'sources'},{key:'campaign_id',label:'Campaign',items:'campaigns'},{key:'team_id',label:'Sales Team',items:'teams'},{key:'user_id',label:'Salesperson',items:'users'},{key:'stage_id',label:'Stage',items:'stages'}]" t-as="filter" t-key="filter.key">
+    <div><label t-esc="filter.label"/><select class="form-select" t-on-change="(ev) => this.setFilter(ev,filter.key)"><option value="">All</option><t t-foreach="state.filters[filter.items] || []" t-as="option" t-key="option.id"><option t-att-value="option.id" t-att-selected="String(state[filter.key]) === String(option.id)" t-esc="option.name"/></t></select></div>
+   </t>
+   <div><label>Type</label><select class="form-select" t-on-change="(ev) => this.setFilter(ev,'lead_type')"><option value="">All</option><option value="lead">Lead</option><option value="opportunity">Opportunity</option></select></div>
+   <div><label>Group by</label><select class="form-select" t-on-change="(ev) => this.setFilter(ev,'group_by')"><t t-foreach="['source','branch','campaign','channel','salesperson','team','stage']" t-as="g" t-key="g"><option t-att-value="g" t-esc="g"/></t></select></div>
+   <button class="btn btn-dark" t-on-click="refresh" t-att-disabled="state.loading">Apply Filters</button>
+  </div>
+  <div t-if="state.loading" class="alert alert-info">Loading analytics...</div>
+  <t t-if="state.result" t-set="r" t-value="state.result">
+   <div class="em_kpis">
+    <t t-foreach="[{name:'Total Leads',value:r.totals.leads},{name:'Won',value:r.totals.won},{name:'Lost',value:r.totals.lost},{name:'Conversion %',value:r.totals.conversion},{name:'Marketing Spend',value:r.totals.spend},{name:'Cost per Lead',value:r.totals.cpl},{name:'Cost per Won',value:r.totals.cost_per_won}]" t-as="kpi" t-key="kpi.name"><div class="em_kpi"><span t-esc="kpi.name"/><strong t-esc="number(kpi.value)"/></div></t>
+   </div>
+   <div class="em_charts">
+    <t t-foreach="[{title:'Marketing Performance',rows:r.by_dimension,field:'leads'},{title:'Won by Segment',rows:r.by_dimension,field:'won'},{title:'Lead Sources',rows:r.by_source,field:'leads'},{title:'Won by Source',rows:r.by_source,field:'won'},{title:'Branch Performance',rows:r.by_branch,field:'leads'},{title:'Won by Branch',rows:r.by_branch,field:'won'},{title:'Marketing Spend by Source',rows:r.spend_source,field:'value'},{title:'Marketing Spend by Platform',rows:r.spend_platform,field:'value'},{title:'Lead Acquisition Trend',rows:r.timeline,field:'leads'},{title:'Won Trend',rows:r.timeline,field:'won'},{title:'Spend by Month',rows:r.spend_month,field:'value'},{title:'CRM Stages',rows:r.by_stage,field:'value'}]" t-as="chart" t-key="chart.title">
+     <section class="em_chart"><h4 t-esc="chart.title"/><div t-if="!chart.rows.length" class="text-muted">No data for selected filters</div><t t-set="maximum" t-value="max(chart.rows,chart.field)"/><div class="em_chart_scroll"><t t-foreach="chart.rows" t-as="entry" t-key="entry.name"><div class="em_bar_row"><div class="em_bar_label"><span t-esc="entry.name"/><strong t-esc="number(entry[chart.field])"/></div><div class="em_track"><div class="em_fill" t-att-style="'width:'+width(entry[chart.field],maximum)"/></div></div></t></div></section>
+    </t>
+   </div>
+   <p class="em_disclaimer">Leads and won are attributed by CRM creation date. Costs are monthly budgets/expenses overlapping the selected date range, not daily allocations. Revenue and ROI are not calculated without reliable attribution. Marketing spend is converted to the selected company's currency.</p>
+  </t>
+ </div>
+</t>
+</templates>
