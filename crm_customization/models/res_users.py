@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from odoo import models, fields, _
 import logging
 
@@ -47,55 +49,74 @@ class ResUsers(models.Model):
         ]).action_archive()
         archived_user.write({'active': False})
 
-        # 3. Redistribute each lead
-        reassigned_count = 0
-        for lead in open_leads:
-            branch_id = lead.branch_name.id if lead.branch_name else False
-            if not branch_id:
+        # 3. Pick the new salesperson of every lead: one round-robin batch per
+        #    branch gives the same turns as picking lead by lead, but saves
+        #    the shared pointer once per branch instead of once per lead.
+        Sequence = self.env['distribute.sequence']
+        assignments = {}  # lead -> new salesperson (False: none available)
+        for branch, branch_leads in open_leads.grouped('branch_name').items():
+            if not branch:
                 _logger.warning(
-                    "Lead id=%s has no branch → skipping redistribution.", lead.id)
+                    "Leads %s have no branch → skipping redistribution.",
+                    branch_leads.ids)
                 continue
-
-            new_salesperson = self.env['distribute.sequence']\
-                ._get_next_salesperson_for_branch(branch_id)
-
-            if not new_salesperson:
+            salespersons = Sequence._get_next_salespersons_for_branch(
+                branch.id, len(branch_leads))
+            if not salespersons:
                 _logger.warning(
                     "No available salesperson for branch id=%s → "
-                    "lead id=%s left unassigned.", branch_id, lead.id)
-                lead.write({'user_id': False})
-                lead.message_post(
-                    body=_(
-                        "Salesperson <b>%s</b> was archived. "
-                        "No available salesperson found in branch <b>%s</b> "
-                        "— opportunity left unassigned.",
-                        archived_user.name,
-                        lead.branch_name.branch_name,
-                    )
+                    "leads %s left unassigned.", branch.id, branch_leads.ids)
+                salespersons = [False] * len(branch_leads)
+            assignments.update(zip(branch_leads, salespersons))
+
+        # 4. Apply the assignments in batches (one write per salesperson).
+        #    crm.lead.write() syncs the new salesperson to the customer.
+        old_name = archived_user.name
+        lead_batches = defaultdict(lambda: self.env['crm.lead'].sudo())
+        customer_owner = {}  # customer -> salesperson of their last lead
+        bodies = {}
+        reassigned_count = 0
+        for lead in open_leads:
+            if lead not in assignments:
+                continue
+            new_salesperson = assignments[lead]
+            lead_batches[new_salesperson] |= lead
+            if lead.partner_id:
+                customer_owner[lead.partner_id] = new_salesperson
+            if not new_salesperson:
+                bodies[lead.id] = _(
+                    "Salesperson <b>%s</b> was archived. "
+                    "No available salesperson found in branch <b>%s</b> "
+                    "— opportunity left unassigned.",
+                    old_name,
+                    lead.branch_name.branch_name,
                 )
                 continue
 
-            old_name = archived_user.name
-            new_name = new_salesperson.name
-
-            lead.write({'user_id': new_salesperson.id})
-            # Keep the customer with the salesperson now owning their opportunity
-            if lead.partner_id.user_id == archived_user:
-                lead.partner_id.write({'user_id': new_salesperson.id})
-            lead.message_post(
-                body=_(
-                    "Salesperson changed from <b>%s</b> to <b>%s</b> "
-                    "because <b>%s</b> was archived (Archive & Redistribute).",
-                    old_name, new_name, old_name,
-                )
+            bodies[lead.id] = _(
+                "Salesperson changed from <b>%s</b> to <b>%s</b> "
+                "because <b>%s</b> was archived (Archive & Redistribute).",
+                old_name, new_salesperson.name, old_name,
             )
             reassigned_count += 1
             _logger.info(
                 "Lead id=%s reassigned from %s → %s",
-                lead.id, old_name, new_name
+                lead.id, old_name, new_salesperson.name
             )
 
-        # 4. Clear the archived salesperson from their remaining customers so
+        for new_salesperson, leads in lead_batches.items():
+            leads.write({'user_id': new_salesperson.id if new_salesperson else False})
+        # Lead by lead, a customer with several leads kept the salesperson of
+        # the last one; batched writes may leave another one, so restore it.
+        for customer, new_salesperson in customer_owner.items():
+            owner_id = new_salesperson.id if new_salesperson else False
+            if customer.user_id.id != owner_id:
+                customer.with_context(mail_auto_subscribe_no_notify=True).write(
+                    {'user_id': owner_id})
+        # Same chatter note as message_post, created in one batch
+        open_leads.browse(list(bodies))._message_log_batch(bodies=bodies)
+
+        # 5. Clear the archived salesperson from their remaining customers so
         #    their next opportunity goes through the distribution logic.
         remaining_partners = self.env['res.partner'].sudo().search([
             ('user_id', '=', archived_user.id),
@@ -106,7 +127,7 @@ class ResUsers(models.Model):
             archived_user.name, len(remaining_partners)
         )
 
-        # 5. Archive the linked contact (partner) if still active
+        # 6. Archive the linked contact (partner) if still active
         if archived_user.partner_id and archived_user.partner_id.active:
             archived_user.partner_id.sudo().write({'active': False})
             _logger.info(
@@ -119,7 +140,7 @@ class ResUsers(models.Model):
             archived_user.name, reassigned_count, len(open_leads)
         )
 
-        # 6. Show result notification
+        # 7. Show result notification
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',

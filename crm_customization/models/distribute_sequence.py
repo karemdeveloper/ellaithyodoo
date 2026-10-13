@@ -37,22 +37,35 @@ class DistributeSequence(models.Model):
         Shared round-robin distribution logic.
         Returns the next res.users salesperson for the given branch,
         respecting current shift and active sequences.
+        """
+        salespersons = self._get_next_salespersons_for_branch(branch_id, 1)
+        return salespersons[0] if salespersons else False
+
+    @api.model
+    def _get_next_salespersons_for_branch(self, branch_id, count):
+        """
+        Returns the next `count` salespersons in turn for the given branch,
+        exactly as `count` successive calls to _get_next_salesperson_for_branch
+        would, but saves the round-robin pointer only once: set_param() clears
+        the whole registry cache, which is costly when done per lead.
+        Returns an empty list when no salesperson is available.
 
         Used by:
-          - opportunity.wizard  (action_distribute)
           - res.users           (action_archive_and_redistribute)
         """
+        if count < 1:
+            return []
         branch = self.env['res.branch'].browse(branch_id)
         if not branch.exists():
             _logger.info("Branch id=%s not found.", branch_id)
-            return False
+            return []
 
         # 1. Get branch sales teams
         sales_teams = self.env['crm.team'].search(
             [('branch_name', '=', branch.id)])
         if not sales_teams:
             _logger.info("No sales teams found for branch %s.", branch.branch_name)
-            return False
+            return []
 
         # 2. Active team members
         active_members = self.env['crm.team.member'].search([
@@ -60,7 +73,7 @@ class DistributeSequence(models.Model):
             ('state', '=', 'active'),
         ])
         if not active_members:
-            return False
+            return []
 
         # 3. Egypt local time
         utc_now = fields.Datetime.now()
@@ -79,7 +92,7 @@ class DistributeSequence(models.Model):
 
         if not all_sequences:
             _logger.info("No active sequences found for branch %s.", branch.branch_name)
-            return False
+            return []
 
         # 5. Shift filter (handles overnight shifts)
         def _is_in_shift(shift, hour):
@@ -137,45 +150,50 @@ class DistributeSequence(models.Model):
 
         valid_ids = sequences.ids
 
-        # 8. Round Robin
-        if last_seq_id in valid_ids:
-            current_index = valid_ids.index(last_seq_id)
-            next_index = (current_index + 1) % len(valid_ids)
-            next_seq = sequences[next_index]
-        else:
-            next_seq = sequences[0]
-
-        # 8b. Archived salesperson → next one in turn takes it
-        if not next_seq.sales_person.active:
-            start = valid_ids.index(next_seq.id)
-            for offset in range(1, len(valid_ids)):
-                candidate = sequences[(start + offset) % len(valid_ids)]
-                if candidate.sales_person.active:
-                    _logger.info("Salesperson %s is archived → turn goes to %s",
-                                 next_seq.sales_person.name, candidate.sales_person.name)
-                    next_seq = candidate
-                    break
+        salespersons = []
+        for _turn in range(count):
+            # 8. Round Robin
+            if last_seq_id in valid_ids:
+                current_index = valid_ids.index(last_seq_id)
+                next_index = (current_index + 1) % len(valid_ids)
+                next_seq = sequences[next_index]
             else:
-                _logger.info("All salespersons in the sequences are archived.")
-                return False
+                next_seq = sequences[0]
 
-        # 9. Safety check
-        if not next_seq.sales_person:
-            _logger.warning("Sequence %s has no salesperson → searching alternative",
-                            next_seq.id)
-            for seq in sequences:
-                if seq.sales_person:
-                    next_seq = seq
-                    break
-            else:
-                return False
+            # 8b. Archived salesperson → next one in turn takes it
+            if not next_seq.sales_person.active:
+                start = valid_ids.index(next_seq.id)
+                for offset in range(1, len(valid_ids)):
+                    candidate = sequences[(start + offset) % len(valid_ids)]
+                    if candidate.sales_person.active:
+                        _logger.info("Salesperson %s is archived → turn goes to %s",
+                                     next_seq.sales_person.name, candidate.sales_person.name)
+                        next_seq = candidate
+                        break
+                else:
+                    _logger.info("All salespersons in the sequences are archived.")
+                    return []
 
-        # 10. Save pointer
-        config.set_param(param_key, str(next_seq.id))
+            # 9. Safety check
+            if not next_seq.sales_person:
+                _logger.warning("Sequence %s has no salesperson → searching alternative",
+                                next_seq.id)
+                for seq in sequences:
+                    if seq.sales_person:
+                        next_seq = seq
+                        break
+                else:
+                    return []
+
+            salespersons.append(next_seq.sales_person)
+            last_seq_id = next_seq.id
+
+        # 10. Save pointer (once for the whole batch)
+        config.set_param(param_key, str(last_seq_id))
 
         _logger.info(
-            "✅ Selected salesperson: %s (seq id=%s) → Saved param key %s",
-            next_seq.sales_person.name, next_seq.id, param_key
+            "✅ Selected %s salesperson(s), last: %s (seq id=%s) → Saved param key %s",
+            len(salespersons), next_seq.sales_person.name, next_seq.id, param_key
         )
 
-        return next_seq.sales_person
+        return salespersons
