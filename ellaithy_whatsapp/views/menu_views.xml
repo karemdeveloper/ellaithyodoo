@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_whatsapp_root" name="WhatsApp" sequence="45" groups="ellaithy_whatsapp.group_whatsapp_user" web_icon="ellaithy_whatsapp,static/description/icon.png"/>
+    <menuitem id="menu_whatsapp_inbox" name="Inbox" parent="menu_whatsapp_root" action="action_whatsapp_conversations" sequence="10" groups="ellaithy_whatsapp.group_whatsapp_user"/>
+    <menuitem id="menu_whatsapp_messages" name="Message History" parent="menu_whatsapp_root" action="action_whatsapp_messages" sequence="20" groups="ellaithy_whatsapp.group_whatsapp_supervisor"/>
+
+    <menuitem id="menu_whatsapp_reports_root" name="Reports" parent="menu_whatsapp_root" sequence="30" groups="ellaithy_whatsapp.group_whatsapp_supervisor"/>
+    <menuitem id="menu_whatsapp_report_messages" name="Message Charts" parent="menu_whatsapp_reports_root" action="action_whatsapp_message_charts" sequence="10"/>
+    <menuitem id="menu_whatsapp_report_conversations" name="Conversation Performance" parent="menu_whatsapp_reports_root" action="action_whatsapp_conversation_reports" sequence="20"/>
+
+    <menuitem id="menu_whatsapp_config_root" name="Configuration" parent="menu_whatsapp_root" sequence="90" groups="ellaithy_whatsapp.group_whatsapp_admin"/>
+    <menuitem id="menu_whatsapp_accounts" name="Accounts" parent="menu_whatsapp_config_root" action="action_whatsapp_accounts" sequence="10"/>
+    <menuitem id="menu_whatsapp_teams" name="Teams" parent="menu_whatsapp_config_root" action="action_whatsapp_teams" sequence="20"/>
+    <menuitem id="menu_whatsapp_templates" name="Templates" parent="menu_whatsapp_config_root" action="action_whatsapp_templates" sequence="30"/>
+</odoo>

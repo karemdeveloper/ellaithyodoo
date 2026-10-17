@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_whatsapp_team_list" model="ir.ui.view">
+        <field name="name">ellaithy.whatsapp.team.list</field>
+        <field name="model">ellaithy.whatsapp.team</field>
+        <field name="arch" type="xml">
+            <list><field name="name"/><field name="supervisor_id"/><field name="assignment_mode"/><field name="member_ids" widget="many2many_tags"/><field name="active"/></list>
+        </field>
+    </record>
+    <record id="view_whatsapp_team_form" model="ir.ui.view">
+        <field name="name">ellaithy.whatsapp.team.form</field>
+        <field name="model">ellaithy.whatsapp.team</field>
+        <field name="arch" type="xml">
+            <form><sheet><div class="oe_title"><h1><field name="name"/></h1></div><group><field name="active"/><field name="company_id"/><field name="supervisor_id"/><field name="assignment_mode"/><field name="member_ids" widget="many2many_tags"/><field name="last_assigned_user_id" readonly="1"/></group></sheet></form>
+        </field>
+    </record>
+    <record id="action_whatsapp_teams" model="ir.actions.act_window"><field name="name">WhatsApp Teams</field><field name="res_model">ellaithy.whatsapp.team</field><field name="view_mode">list,form</field></record>
+</odoo>

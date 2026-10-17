@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_wa_account_user,WhatsApp Account User,model_ellaithy_whatsapp_account,group_whatsapp_user,1,0,0,0
+access_wa_account_admin,WhatsApp Account Admin,model_ellaithy_whatsapp_account,group_whatsapp_admin,1,1,1,1
+access_wa_team_user,WhatsApp Team User,model_ellaithy_whatsapp_team,group_whatsapp_user,1,0,0,0
+access_wa_team_admin,WhatsApp Team Admin,model_ellaithy_whatsapp_team,group_whatsapp_admin,1,1,1,1
+access_wa_template_user,WhatsApp Template User,model_ellaithy_whatsapp_template,group_whatsapp_user,1,0,0,0
+access_wa_template_admin,WhatsApp Template Admin,model_ellaithy_whatsapp_template,group_whatsapp_admin,1,1,1,1
+access_wa_conversation_user,WhatsApp Conversation User,model_ellaithy_whatsapp_conversation,group_whatsapp_user,1,1,1,0
+access_wa_conversation_supervisor,WhatsApp Conversation Supervisor,model_ellaithy_whatsapp_conversation,group_whatsapp_supervisor,1,1,1,0
+access_wa_conversation_admin,WhatsApp Conversation Admin,model_ellaithy_whatsapp_conversation,group_whatsapp_admin,1,1,1,1
+access_wa_message_user,WhatsApp Message User,model_ellaithy_whatsapp_message,group_whatsapp_user,1,1,1,0
+access_wa_message_supervisor,WhatsApp Message Supervisor,model_ellaithy_whatsapp_message,group_whatsapp_supervisor,1,1,1,0
+access_wa_message_admin,WhatsApp Message Admin,model_ellaithy_whatsapp_message,group_whatsapp_admin,1,1,1,1
+access_wa_send_wizard_user,WhatsApp Send Wizard User,model_ellaithy_whatsapp_send_wizard,group_whatsapp_user,1,1,1,1

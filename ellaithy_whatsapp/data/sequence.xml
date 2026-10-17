@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_whatsapp_conversation" model="ir.sequence">
+        <field name="name">WhatsApp Conversation</field>
+        <field name="code">ellaithy.whatsapp.conversation</field>
+        <field name="prefix">WA/</field>
+        <field name="padding">6</field>
+    </record>
+</odoo>

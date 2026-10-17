@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="crm_lead_form_whatsapp" model="ir.ui.view">
+        <field name="name">crm.lead.form.whatsapp</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside"><button name="action_open_whatsapp" type="object" string="WhatsApp" icon="fa-whatsapp" class="btn-secondary" groups="ellaithy_whatsapp.group_whatsapp_user"/></xpath>
+        </field>
+    </record>
+
+    <record id="complaint_form_whatsapp" model="ir.ui.view">
+        <field name="name">res.complaint.form.whatsapp</field>
+        <field name="model">res.complaint</field>
+        <field name="inherit_id" ref="crm_customization.view_res_complaint_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside"><button name="action_open_whatsapp" type="object" string="WhatsApp" icon="fa-whatsapp" class="btn-secondary" groups="ellaithy_whatsapp.group_whatsapp_user"/></xpath>
+        </field>
+    </record>
+
+    <record id="helpdesk_ticket_form_whatsapp" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.form.whatsapp</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="inherit_id" ref="helpdesk.helpdesk_ticket_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside"><button name="action_open_whatsapp" type="object" string="WhatsApp" icon="fa-whatsapp" class="btn-secondary" groups="ellaithy_whatsapp.group_whatsapp_user"/></xpath>
+        </field>
+    </record>
+</odoo>

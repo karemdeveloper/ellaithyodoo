@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_whatsapp_account_list" model="ir.ui.view">
+        <field name="name">ellaithy.whatsapp.account.list</field>
+        <field name="model">ellaithy.whatsapp.account</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="business_phone"/>
+                <field name="phone_number_id"/>
+                <field name="graph_api_version"/>
+                <field name="default_team_id"/>
+                <field name="last_test_status"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_whatsapp_account_form" model="ir.ui.view">
+        <field name="name">ellaithy.whatsapp.account.form</field>
+        <field name="model">ellaithy.whatsapp.account</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Account">
+                <header>
+                    <button name="action_test_connection" type="object" string="Test Connection" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="active"/>
+                            <field name="company_id"/>
+                            <field name="business_account_id"/>
+                            <field name="phone_number_id"/>
+                            <field name="business_phone"/>
+                            <field name="graph_api_version"/>
+                            <field name="default_country_code"/>
+                        </group>
+                        <group>
+                            <field name="default_team_id"/>
+                            <field name="auto_create_contact"/>
+                            <field name="auto_create_lead"/>
+                            <field name="notify_assignee"/>
+                            <field name="last_test_at" readonly="1"/>
+                            <field name="last_test_status" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Meta Credentials" groups="ellaithy_whatsapp.group_whatsapp_admin">
+                        <field name="access_token" password="True"/>
+                        <field name="verify_token" password="True"/>
+                        <field name="app_secret" password="True"/>
+                    </group>
+                    <group string="Webhook">
+                        <field name="webhook_url" readonly="1"/>
+                        <div class="text-muted">Subscribe Meta Webhooks to messages. Use the URL above and the configured Verify Token.</div>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_whatsapp_accounts" model="ir.actions.act_window">
+        <field name="name">WhatsApp Accounts</field>
+        <field name="res_model">ellaithy.whatsapp.account</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
