@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Standard job types -->
+    <record id="job_employee" model="bank.offer.job.type"><field name="name">Employee</field><field name="sequence">10</field></record>
+    <record id="job_business_owner" model="bank.offer.job.type"><field name="name">Business Owner</field><field name="sequence">20</field></record>
+    <record id="job_freelancer" model="bank.offer.job.type"><field name="name">Freelancer</field><field name="sequence">30</field></record>
+    <record id="job_pension" model="bank.offer.job.type"><field name="name">Pension</field><field name="sequence">40</field></record>
+    <record id="job_military" model="bank.offer.job.type"><field name="name">Military / Police</field><field name="sequence">50</field></record>
+    <record id="job_judiciary" model="bank.offer.job.type"><field name="name">Judiciary / Prosecution</field><field name="sequence">60</field></record>
+    <record id="job_media" model="bank.offer.job.type"><field name="name">Media / Marketing / Production</field><field name="sequence">70</field></record>
+    <record id="job_driver" model="bank.offer.job.type"><field name="name">Driver</field><field name="sequence">80</field></record>
+    <record id="job_other" model="bank.offer.job.type"><field name="name">Other</field><field name="sequence">90</field></record>
+
+    <!-- Bank master data and sale-ban fees supplied in the financing-program source. -->
+    <record id="bank_hdb" model="bank.offer.bank"><field name="name">Housing &amp; Development Bank</field><field name="code">HDB</field><field name="sale_ban_fee">0</field></record>
+    <record id="bank_ebank" model="bank.offer.bank"><field name="name">Export Development Bank of Egypt (EBank)</field><field name="code">EBANK</field><field name="sale_ban_fee">800</field></record>
+    <record id="bank_adib" model="bank.offer.bank"><field name="name">Abu Dhabi Islamic Bank</field><field name="code">ADIB</field><field name="sale_ban_fee">1000</field></record>
+    <record id="bank_cairo" model="bank.offer.bank"><field name="name">Banque du Caire</field><field name="code">BDC</field><field name="sale_ban_fee">0</field></record>
+    <record id="bank_valu" model="bank.offer.bank"><field name="name">Valu Consumer Finance</field><field name="code">VALU</field><field name="sale_ban_fee">0</field></record>
+    <record id="bank_nxt" model="bank.offer.bank"><field name="name">NXT Bank</field><field name="code">NXT</field><field name="sale_ban_fee">750</field></record>
+    <record id="bank_nbk" model="bank.offer.bank"><field name="name">National Bank of Kuwait (NBK)</field><field name="code">NBK</field><field name="sale_ban_fee">0</field></record>
+    <record id="bank_saib" model="bank.offer.bank"><field name="name">SAIB Bank</field><field name="code">SAIB</field><field name="sale_ban_fee">300</field></record>
+    <record id="bank_eg" model="bank.offer.bank"><field name="name">EG Bank</field><field name="code">EGBANK</field><field name="sale_ban_fee">1400</field></record>
+    <record id="bank_kfh" model="bank.offer.bank"><field name="name">Kuwait Finance House (KFH)</field><field name="code">KFH</field><field name="sale_ban_fee">750</field></record>
+    <record id="bank_agri" model="bank.offer.bank"><field name="name">Agricultural Bank of Egypt</field><field name="code">ABE</field><field name="sale_ban_fee">850</field></record>
+    <record id="bank_abk" model="bank.offer.bank"><field name="name">Al Ahli Bank of Kuwait</field><field name="code">ABK</field><field name="sale_ban_fee">0</field></record>
+
+    <!-- Agricultural Bank programs explicitly stated in the supplied source. -->
+    <record id="program_agri_20" model="bank.offer.program">
+        <field name="name">20% Down Payment</field><field name="bank_id" ref="bank_agri"/>
+        <field name="min_downpayment_pct">20</field><field name="max_downpayment_pct">29.99</field>
+        <field name="min_term_months">6</field><field name="max_term_months">96</field>
+        <field name="home_inquiry">required</field><field name="work_inquiry">required</field>
+        <field name="special_notes">Comprehensive insurance required. Source also mentions vehicle price 1,500,000 for this program.</field>
+    </record>
+    <record id="rate_agri_20" model="bank.offer.rate"><field name="program_id" ref="program_agri_20"/><field name="min_downpayment_pct">20</field><field name="max_downpayment_pct">29.99</field><field name="min_term_months">6</field><field name="max_term_months">96</field><field name="annual_interest_rate">14.5</field><field name="insurance_required">1</field></record>
+
+    <record id="program_agri_30" model="bank.offer.program">
+        <field name="name">30% Down Payment</field><field name="bank_id" ref="bank_agri"/>
+        <field name="min_downpayment_pct">30</field><field name="max_downpayment_pct">39.99</field>
+        <field name="min_term_months">6</field><field name="max_term_months">96</field>
+        <field name="min_finance_amount">100000</field><field name="home_inquiry">required</field><field name="work_inquiry">required</field>
+        <field name="special_notes">Comprehensive insurance required.</field>
+    </record>
+    <record id="rate_agri_30" model="bank.offer.rate"><field name="program_id" ref="program_agri_30"/><field name="min_downpayment_pct">30</field><field name="max_downpayment_pct">39.99</field><field name="min_term_months">6</field><field name="max_term_months">96</field><field name="annual_interest_rate">13.5</field><field name="insurance_required">1</field></record>
+
+    <record id="program_agri_40" model="bank.offer.program">
+        <field name="name">40% Down Payment</field><field name="bank_id" ref="bank_agri"/>
+        <field name="min_downpayment_pct">40</field><field name="max_downpayment_pct">49.99</field>
+        <field name="min_term_months">6</field><field name="max_term_months">96</field>
+        <field name="home_inquiry">none</field><field name="work_inquiry">none</field>
+        <field name="special_notes">Insurance is optional.</field>
+    </record>
+    <record id="rate_agri_40" model="bank.offer.rate"><field name="program_id" ref="program_agri_40"/><field name="min_downpayment_pct">40</field><field name="max_downpayment_pct">49.99</field><field name="min_term_months">6</field><field name="max_term_months">96</field><field name="annual_interest_rate">13</field></record>
+
+    <record id="program_agri_50" model="bank.offer.program">
+        <field name="name">50% Down Payment</field><field name="bank_id" ref="bank_agri"/>
+        <field name="min_downpayment_pct">50</field><field name="max_downpayment_pct">59.99</field>
+        <field name="min_term_months">6</field><field name="max_term_months">96</field>
+        <field name="home_inquiry">none</field><field name="work_inquiry">none</field>
+        <field name="special_notes">Insurance is optional.</field>
+    </record>
+    <record id="rate_agri_50" model="bank.offer.rate"><field name="program_id" ref="program_agri_50"/><field name="min_downpayment_pct">50</field><field name="max_downpayment_pct">59.99</field><field name="min_term_months">6</field><field name="max_term_months">96</field><field name="annual_interest_rate">11.5</field></record>
+
+    <record id="program_agri_60" model="bank.offer.program">
+        <field name="name">60% Down Payment</field><field name="bank_id" ref="bank_agri"/>
+        <field name="min_downpayment_pct">60</field><field name="max_downpayment_pct">100</field>
+        <field name="min_term_months">6</field><field name="max_term_months">96</field>
+        <field name="home_inquiry">none</field><field name="work_inquiry">none</field>
+        <field name="special_notes">No insurance required.</field>
+    </record>
+    <record id="rate_agri_60" model="bank.offer.rate"><field name="program_id" ref="program_agri_60"/><field name="min_downpayment_pct">60</field><field name="max_downpayment_pct">100</field><field name="min_term_months">6</field><field name="max_term_months">96</field><field name="annual_interest_rate">12</field></record>
+
+    <!-- Valu programs explicitly stated in the source. -->
+    <record id="program_valu_0_30" model="bank.offer.program">
+        <field name="name">New Cars - Down Payment under 30%</field><field name="bank_id" ref="bank_valu"/>
+        <field name="vehicle_type">new</field><field name="min_downpayment_pct">0</field><field name="max_downpayment_pct">29.99</field>
+        <field name="special_notes">No insurance. Source states immediate approvals and work all days of the week.</field>
+    </record>
+    <record id="rate_valu_0_30" model="bank.offer.rate"><field name="program_id" ref="program_valu_0_30"/><field name="min_downpayment_pct">0</field><field name="max_downpayment_pct">29.99</field><field name="min_term_months">6</field><field name="max_term_months">84</field><field name="annual_interest_rate">14</field></record>
+
+    <record id="program_valu_30" model="bank.offer.program">
+        <field name="name">New Cars - 30%+ Down Payment</field><field name="bank_id" ref="bank_valu"/>
+        <field name="vehicle_type">new</field><field name="min_downpayment_pct">30</field><field name="max_downpayment_pct">100</field>
+        <field name="approval_days">0</field><field name="special_notes">No insurance and no administrative fee when sale-ban remains.</field>
+    </record>
+    <record id="rate_valu_30" model="bank.offer.rate"><field name="program_id" ref="program_valu_30"/><field name="min_downpayment_pct">30</field><field name="max_downpayment_pct">100</field><field name="min_term_months">6</field><field name="max_term_months">84</field><field name="annual_interest_rate">12.5</field></record>
+
+    <record id="program_valu_used" model="bank.offer.program">
+        <field name="name">Used Cars from Model 2009</field><field name="bank_id" ref="bank_valu"/>
+        <field name="vehicle_type">used</field><field name="used_vehicle_min_year">2009</field>
+        <field name="approval_days">0</field><field name="special_notes">Used-car program stated in the supplied source.</field>
+    </record>
+    <record id="rate_valu_used" model="bank.offer.rate"><field name="program_id" ref="program_valu_used"/><field name="min_downpayment_pct">0</field><field name="max_downpayment_pct">100</field><field name="min_term_months">6</field><field name="max_term_months">84</field><field name="annual_interest_rate">15.5</field></record>
+
+    <!-- Banks whose detailed rate data was supplied as images are intentionally created only as bank records, to avoid inventing rates not present in the text export. -->
+</odoo>

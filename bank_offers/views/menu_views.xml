@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_bank_offers_root" name="Bank Offers" sequence="45" groups="bank_offers.group_bank_offers_user" web_icon="bank_offers,static/description/icon.png"/>
+    <menuitem id="menu_bank_offers_assessments" name="Pre-Assessment" parent="menu_bank_offers_root" action="action_bank_offer_assessments" sequence="10" groups="bank_offers.group_bank_offers_user"/>
+    <menuitem id="menu_bank_offers_programs_user" name="Financing Programs" parent="menu_bank_offers_root" action="action_bank_offer_programs" sequence="20" groups="bank_offers.group_bank_offers_user"/>
+
+    <menuitem id="menu_bank_offers_config" name="Configuration" parent="menu_bank_offers_root" sequence="90" groups="bank_offers.group_bank_offers_manager"/>
+    <menuitem id="menu_bank_offers_banks" name="Banks" parent="menu_bank_offers_config" action="action_bank_offer_banks" sequence="10" groups="bank_offers.group_bank_offers_manager"/>
+    <menuitem id="menu_bank_offers_programs" name="Programs &amp; Rates" parent="menu_bank_offers_config" action="action_bank_offer_programs" sequence="20" groups="bank_offers.group_bank_offers_manager"/>
+    <menuitem id="menu_bank_offers_job_types" name="Job Types" parent="menu_bank_offers_config" action="action_bank_offer_job_types" sequence="30" groups="bank_offers.group_bank_offers_manager"/>
+</odoo>

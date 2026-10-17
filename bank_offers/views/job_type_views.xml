@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bank_offer_job_type_list" model="ir.ui.view">
+        <field name="name">bank.offer.job.type.list</field><field name="model">bank.offer.job.type</field>
+        <field name="arch" type="xml"><list editable="bottom"><field name="sequence" widget="handle"/><field name="name"/><field name="active"/></list></field>
+    </record>
+    <record id="action_bank_offer_job_types" model="ir.actions.act_window">
+        <field name="name">Job Types</field><field name="res_model">bank.offer.job.type</field><field name="view_mode">list</field>
+    </record>
+</odoo>

@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bank_offer_bank_user,bank.offer.bank user,model_bank_offer_bank,bank_offers.group_bank_offers_user,1,0,0,0
+access_bank_offer_bank_manager,bank.offer.bank manager,model_bank_offer_bank,bank_offers.group_bank_offers_manager,1,1,1,1
+access_bank_offer_program_user,bank.offer.program user,model_bank_offer_program,bank_offers.group_bank_offers_user,1,0,0,0
+access_bank_offer_program_manager,bank.offer.program manager,model_bank_offer_program,bank_offers.group_bank_offers_manager,1,1,1,1
+access_bank_offer_rate_user,bank.offer.rate user,model_bank_offer_rate,bank_offers.group_bank_offers_user,1,0,0,0
+access_bank_offer_rate_manager,bank.offer.rate manager,model_bank_offer_rate,bank_offers.group_bank_offers_manager,1,1,1,1
+access_bank_offer_job_type_user,bank.offer.job.type user,model_bank_offer_job_type,bank_offers.group_bank_offers_user,1,0,0,0
+access_bank_offer_job_type_manager,bank.offer.job.type manager,model_bank_offer_job_type,bank_offers.group_bank_offers_manager,1,1,1,1
+access_bank_offer_assessment_user,bank.offer.assessment user,model_bank_offer_assessment,bank_offers.group_bank_offers_user,1,1,1,0
+access_bank_offer_assessment_manager,bank.offer.assessment manager,model_bank_offer_assessment,bank_offers.group_bank_offers_manager,1,1,1,1
+access_bank_offer_result_user,bank.offer.assessment.result user,model_bank_offer_assessment_result,bank_offers.group_bank_offers_user,1,1,1,1
+access_bank_offer_result_manager,bank.offer.assessment.result manager,model_bank_offer_assessment_result,bank_offers.group_bank_offers_manager,1,1,1,1

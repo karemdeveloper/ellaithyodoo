@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bank_offer_assessment_search" model="ir.ui.view">
+        <field name="name">bank.offer.assessment.search</field><field name="model">bank.offer.assessment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/><field name="customer_name"/><field name="phone"/><field name="user_id"/>
+                <filter string="Draft" domain="[('state','=','draft')]"/>
+                <filter string="Calculated" domain="[('state','=','calculated')]"/>
+                <group expand="0" string="Group By"><filter string="Sales User" context="{'group_by':'user_id'}"/><filter string="Date" context="{'group_by':'assessment_date'}"/></group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_bank_offer_assessment_list" model="ir.ui.view">
+        <field name="name">bank.offer.assessment.list</field><field name="model">bank.offer.assessment</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'calculated'">
+                <field name="name"/><field name="assessment_date"/><field name="customer_name"/><field name="job_type_id"/>
+                <field name="monthly_income"/><field name="car_price"/><field name="down_payment"/><field name="term_months"/>
+                <field name="eligible_count"/><field name="user_id" groups="bank_offers.group_bank_offers_manager"/><field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_bank_offer_assessment_form" model="ir.ui.view">
+        <field name="name">bank.offer.assessment.form</field><field name="model">bank.offer.assessment</field>
+        <field name="arch" type="xml">
+            <form string="Financing Pre-Assessment">
+                <header>
+                    <button name="action_calculate" type="object" string="Calculate &amp; Recommend" class="btn-primary" invisible="state == 'calculated'"/>
+                    <button name="action_calculate" type="object" string="Recalculate" class="btn-secondary" invisible="state != 'calculated'"/>
+                    <button name="action_reset_draft" type="object" string="Reset" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,calculated"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><label for="name"/><h1><field name="name"/></h1></div>
+                    <group>
+                        <group string="Customer">
+                            <field name="customer_name"/><field name="phone"/><field name="monthly_income"/>
+                            <field name="job_type_id"/><field name="age"/>
+                        </group>
+                        <group string="Vehicle &amp; Finance">
+                            <field name="vehicle_type"/><field name="vehicle_model_year" invisible="vehicle_type != 'used'"/>
+                            <field name="car_price"/><field name="down_payment"/><field name="downpayment_pct" readonly="1"/>
+                            <field name="finance_amount" readonly="1"/><field name="term_months"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="assessment_date"/><field name="user_id" groups="bank_offers.group_bank_offers_manager"/>
+                        <field name="eligible_count" readonly="1"/>
+                    </group>
+                    <separator string="Top 3 Recommended Offers"/>
+                    <field name="result_ids" readonly="1" nolabel="1">
+                        <list create="0" edit="0" delete="0" decoration-success="rank == 1" decoration-info="rank == 2">
+                            <field name="rank"/>
+                            <field name="bank_id"/>
+                            <field name="program_id"/>
+                            <field name="annual_interest_rate"/>
+                            <field name="interest_method"/>
+                            <field name="monthly_installment"/>
+                            <field name="installment_income_pct"/>
+                            <field name="approval_days"/>
+                            <field name="insurance_required" optional="show"/>
+                            <field name="insurance_rate_pct" optional="show"/>
+                            <field name="annual_insurance_amount" optional="show"/>
+                            <field name="admin_fee" optional="show"/>
+                            <field name="sale_ban_fee" optional="show"/>
+                        </list>
+                    </field>
+                    <field name="notes" placeholder="Sales notes..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bank_offer_assessments" model="ir.actions.act_window">
+        <field name="name">Pre-Assessments</field><field name="res_model">bank.offer.assessment</field><field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_bank_offer_assessment_search"/>
+        <field name="context">{'search_default_my_assessments': 1}</field>
+    </record>
+</odoo>

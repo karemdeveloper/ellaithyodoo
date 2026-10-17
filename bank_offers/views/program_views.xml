@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bank_offer_program_search" model="ir.ui.view">
+        <field name="name">bank.offer.program.search</field>
+        <field name="model">bank.offer.program</field>
+        <field name="arch" type="xml">
+            <search string="Bank Programs">
+                <field name="name"/><field name="bank_id"/><field name="vehicle_type"/>
+                <filter name="active" string="Active" domain="[('active','=',True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Bank" context="{'group_by':'bank_id'}"/>
+                    <filter string="Vehicle Type" context="{'group_by':'vehicle_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_bank_offer_program_list" model="ir.ui.view">
+        <field name="name">bank.offer.program.list</field>
+        <field name="model">bank.offer.program</field>
+        <field name="arch" type="xml">
+            <list string="Financing Programs">
+                <field name="bank_id"/>
+                <field name="name"/>
+                <field name="vehicle_type"/>
+                <field name="min_downpayment_pct"/>
+                <field name="max_downpayment_pct"/>
+                <field name="min_term_months"/>
+                <field name="max_term_months"/>
+                <field name="approval_days"/>
+                <field name="last_verified_date" optional="show"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_bank_offer_program_form" model="ir.ui.view">
+        <field name="name">bank.offer.program.form</field>
+        <field name="model">bank.offer.program</field>
+        <field name="arch" type="xml">
+            <form string="Financing Program">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title"><label for="name"/><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="bank_id"/>
+                            <field name="vehicle_type"/>
+                            <field name="used_vehicle_min_year" invisible="vehicle_type != 'used'"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="approval_days"/>
+                            <field name="effective_from"/>
+                            <field name="effective_to"/>
+                            <field name="last_verified_date"/>
+                            <field name="verified_by_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Eligibility">
+                            <group>
+                                <group string="Down Payment &amp; Term">
+                                    <field name="min_downpayment_pct"/><field name="max_downpayment_pct"/>
+                                    <field name="min_term_months"/><field name="max_term_months"/>
+                                </group>
+                                <group string="Customer">
+                                    <field name="min_customer_age"/><field name="max_customer_age"/>
+                                    <field name="max_age_at_end"/>
+                                    <field name="min_monthly_income"/>
+                                    <field name="max_installment_income_pct"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Amounts">
+                                    <field name="min_finance_amount"/><field name="max_finance_amount"/><field name="max_car_price"/>
+                                </group>
+                                <group string="Checks">
+                                    <field name="home_inquiry"/><field name="work_inquiry"/>
+                                    <field name="iscore_required"/><field name="negative_area_allowed"/>
+                                </group>
+                            </group>
+                            <field name="accepted_job_type_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Rates">
+                            <field name="rate_line_ids" context="{'default_program_id': id}">
+                                <list editable="bottom">
+                                    <field name="min_downpayment_pct"/>
+                                    <field name="max_downpayment_pct"/>
+                                    <field name="min_term_months"/>
+                                    <field name="max_term_months"/>
+                                    <field name="annual_interest_rate"/>
+                                    <field name="interest_method"/>
+                                    <field name="insurance_required"/>
+                                    <field name="insurance_rate_pct" optional="show"/>
+                                    <field name="admin_fee_pct" optional="show"/>
+                                    <field name="sale_ban_fee" optional="show"/>
+                                    <field name="notes" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Requirements">
+                            <group><field name="acceptance_criteria"/><field name="required_documents"/></group>
+                            <field name="special_notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bank_offer_programs" model="ir.actions.act_window">
+        <field name="name">Financing Programs</field><field name="res_model">bank.offer.program</field><field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_bank_offer_program_search"/>
+    </record>
+</odoo>
