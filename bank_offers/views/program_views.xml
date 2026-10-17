@@ -4,12 +4,12 @@
         <field name="name">bank.offer.program.search</field>
         <field name="model">bank.offer.program</field>
         <field name="arch" type="xml">
-            <search string="Bank Programs">
+            <search>
                 <field name="name"/><field name="bank_id"/><field name="vehicle_type"/>
-                <filter name="active" string="Active" domain="[('active','=',True)]"/>
+                <filter name="filter_active" string="Active" domain="[('active','=',True)]"/>
                 <group expand="0" string="Group By">
-                    <filter string="Bank" context="{'group_by':'bank_id'}"/>
-                    <filter string="Vehicle Type" context="{'group_by':'vehicle_type'}"/>
+                    <filter name="group_by_bank" string="Bank" context="{'group_by':'bank_id'}"/>
+                    <filter name="group_by_vehicle_type" string="Vehicle Type" context="{'group_by':'vehicle_type'}"/>
                 </group>
             </search>
         </field>

@@ -5,9 +5,10 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name"/><field name="customer_name"/><field name="phone"/><field name="user_id"/>
-                <filter string="Draft" domain="[('state','=','draft')]"/>
-                <filter string="Calculated" domain="[('state','=','calculated')]"/>
-                <group expand="0" string="Group By"><filter string="Sales User" context="{'group_by':'user_id'}"/><filter string="Date" context="{'group_by':'assessment_date'}"/></group>
+                <filter name="filter_draft" string="Draft" domain="[('state','=','draft')]"/>
+                <filter name="filter_calculated" string="Calculated" domain="[('state','=','calculated')]"/>
+                <filter name="my_assessments" string="My Assessments" domain="[('user_id','=',uid)]"/>
+                <group expand="0" string="Group By"><filter name="group_by_sales_user" string="Sales User" context="{'group_by':'user_id'}"/><filter name="group_by_date" string="Date" context="{'group_by':'assessment_date'}"/></group>
             </search>
         </field>
     </record>
