@@ -1,7 +1,7 @@
 {
     "name": "Ellaithy POS",
     "summary": "Internal POS/order request workflow integrated with Sales, Stock and Accounting",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.0.1",
     "category": "Sales/Point of Sale",
     "author": "Ellaithy Auto Group",
     "license": "LGPL-3",

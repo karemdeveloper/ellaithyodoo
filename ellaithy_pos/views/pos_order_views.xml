@@ -79,6 +79,7 @@
                     <field name="state" widget="statusbar" statusbar_visible="draft,requested,approved,confirmed,invoiced,done"/>
                 </header>
                 <sheet>
+                    <field name="is_pos_manager" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_open_sale_order" type="object" class="oe_stat_button" icon="fa-shopping-cart" invisible="not sale_order_id">
                             <div class="o_stat_info"><span class="o_stat_text">Sales Order</span></div>
@@ -113,7 +114,7 @@
 
                     <notebook>
                         <page string="Products">
-                            <field name="line_ids" readonly="state not in ('draft', 'rejected') and not user_has_groups('ellaithy_pos.group_ellaithy_pos_manager')">
+                            <field name="line_ids" readonly="state not in ('draft', 'rejected') and not is_pos_manager">
                                 <list editable="bottom">
                                     <field name="product_id"/>
                                     <field name="name" optional="hide"/>

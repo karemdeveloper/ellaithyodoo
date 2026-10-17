@@ -98,6 +98,12 @@ class EllaithyPosOrder(models.Model):
     invoice_count = fields.Integer(compute="_compute_erp_counts")
     picking_count = fields.Integer(compute="_compute_erp_counts")
     invoice_status = fields.Selection(related="sale_order_id.invoice_status", readonly=True)
+    is_pos_manager = fields.Boolean(compute="_compute_is_pos_manager")
+
+    def _compute_is_pos_manager(self):
+        is_manager = self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_manager")
+        for order in self:
+            order.is_pos_manager = is_manager
 
     @api.model
     def _default_warehouse(self):
