@@ -4,144 +4,86 @@ from odoo.exceptions import UserError, ValidationError
 
 class EllaithyPosOrder(models.Model):
     _name = "ellaithy.pos.order"
-    _description = "Ellaithy POS Order Request"
+    _description = "Ellaithy POS Order"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
 
-    name = fields.Char(
-        string="Reference",
-        required=True,
-        copy=False,
-        readonly=True,
-        default=lambda self: _("New"),
-        tracking=True,
-    )
-    state = fields.Selection(
-        [
-            ("draft", "Draft"),
-            ("requested", "Requested"),
-            ("approved", "Approved"),
-            ("confirmed", "ERP Confirmed"),
-            ("invoiced", "Invoiced"),
-            ("done", "Done"),
-            ("rejected", "Rejected"),
-            ("cancel", "Cancelled"),
-        ],
-        default="draft",
-        required=True,
-        tracking=True,
-    )
-    request_date = fields.Datetime(default=fields.Datetime.now, required=True, tracking=True)
-    user_id = fields.Many2one(
-        "res.users",
-        string="Requested By",
-        required=True,
-        default=lambda self: self.env.user,
-        tracking=True,
-    )
-    salesperson_id = fields.Many2one(
-        "res.users",
-        string="Salesperson",
-        default=lambda self: self.env.user,
-        tracking=True,
-    )
-    partner_id = fields.Many2one(
-        "res.partner",
-        string="Customer",
-        required=True,
-        tracking=True,
-        domain="[('customer_rank', '>', 0)]",
-    )
-    customer_phone = fields.Char(related="partner_id.phone", store=False, readonly=True)
-    company_id = fields.Many2one(
-        "res.company",
-        required=True,
-        default=lambda self: self.env.company,
-    )
-    currency_id = fields.Many2one(
-        "res.currency",
-        related="company_id.currency_id",
-        readonly=True,
-    )
-    warehouse_id = fields.Many2one(
-        "stock.warehouse",
-        string="Warehouse",
-        required=True,
-        default=lambda self: self._default_warehouse(),
-        domain="[('company_id', '=', company_id)]",
-        tracking=True,
-    )
-    payment_method_id = fields.Many2one(
-        "ellaithy.pos.payment.method",
-        string="Payment Method",
-        tracking=True,
-    )
-    payment_reference = fields.Char(string="Payment Reference", tracking=True)
+    name = fields.Char(default=lambda self: _("New"), required=True, readonly=True, copy=False, tracking=True)
+    order_type = fields.Selection([("sale", "Sale"), ("return", "Return")], default="sale", required=True, tracking=True)
+    original_order_id = fields.Many2one("ellaithy.pos.order", string="Original Sale", domain="[('order_type','=','sale'),('state','=','done')]", tracking=True)
+    state = fields.Selection([
+        ("draft", "Draft"), ("requested", "Requested"), ("approved", "Approved"),
+        ("processing", "Processing"), ("done", "Done"), ("rejected", "Rejected"), ("cancel", "Cancelled")
+    ], default="draft", required=True, tracking=True, index=True)
+    request_date = fields.Datetime(default=fields.Datetime.now, required=True, tracking=True, index=True)
+    completed_date = fields.Datetime(readonly=True, tracking=True)
+    requester_id = fields.Many2one("res.users", default=lambda self: self.env.user, required=True, readonly=True, tracking=True)
+    operator_id = fields.Many2one("res.users", string="POS Operator", readonly=True, tracking=True)
+    customer_id = fields.Many2one("ellaithy.pos.customer", required=True, ondelete="restrict", tracking=True)
+    warehouse_id = fields.Many2one("ellaithy.pos.warehouse", required=True, ondelete="restrict", tracking=True)
+    payment_method_id = fields.Many2one("ellaithy.pos.payment.method", tracking=True)
+    payment_reference = fields.Char(tracking=True)
     notes = fields.Text()
     rejection_reason = fields.Text(tracking=True)
 
-    line_ids = fields.One2many(
-        "ellaithy.pos.order.line",
-        "order_id",
-        string="Order Lines",
-        copy=True,
-    )
+    line_ids = fields.One2many("ellaithy.pos.order.line", "order_id", copy=True)
+    payment_ids = fields.One2many("ellaithy.pos.payment", "order_id")
+    stock_move_ids = fields.One2many("ellaithy.pos.stock.move", "order_id")
 
-    amount_untaxed = fields.Monetary(compute="_compute_amounts", store=True)
-    amount_tax = fields.Monetary(compute="_compute_amounts", store=True)
-    amount_total = fields.Monetary(compute="_compute_amounts", store=True)
-    total_cost = fields.Monetary(compute="_compute_amounts", store=True)
-    margin = fields.Monetary(compute="_compute_amounts", store=True)
+    amount_before_discount = fields.Float(compute="_compute_amounts", store=True)
+    amount_discount = fields.Float(compute="_compute_amounts", store=True)
+    amount_untaxed = fields.Float(compute="_compute_amounts", store=True)
+    amount_tax = fields.Float(compute="_compute_amounts", store=True)
+    amount_total = fields.Float(compute="_compute_amounts", store=True)
+    total_cost = fields.Float(compute="_compute_amounts", store=True)
+    margin = fields.Float(compute="_compute_amounts", store=True)
     margin_percent = fields.Float(compute="_compute_amounts", store=True)
+    amount_paid = fields.Float(compute="_compute_payment", store=True)
+    balance_due = fields.Float(compute="_compute_payment", store=True)
+    payment_status = fields.Selection([("unpaid", "Unpaid"), ("partial", "Partially Paid"), ("paid", "Paid")], compute="_compute_payment", store=True)
+    line_count = fields.Integer(compute="_compute_counts")
+    payment_count = fields.Integer(compute="_compute_counts")
 
-    sale_order_id = fields.Many2one("sale.order", string="Sales Order", copy=False, readonly=True, tracking=True)
-    invoice_count = fields.Integer(compute="_compute_erp_counts")
-    picking_count = fields.Integer(compute="_compute_erp_counts")
-    invoice_status = fields.Selection(related="sale_order_id.invoice_status", readonly=True)
-    is_pos_manager = fields.Boolean(compute="_compute_is_pos_manager")
+    is_operator = fields.Boolean(compute="_compute_roles")
+    is_admin = fields.Boolean(compute="_compute_roles")
 
-    def _compute_is_pos_manager(self):
-        is_manager = self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_manager")
-        for order in self:
-            order.is_pos_manager = is_manager
+    def _compute_roles(self):
+        op = self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_operator")
+        admin = self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_admin")
+        for rec in self:
+            rec.is_operator = op or admin
+            rec.is_admin = admin
 
-    @api.model
-    def _default_warehouse(self):
-        return self.env["stock.warehouse"].search([("company_id", "=", self.env.company.id)], limit=1)
-
-    @api.depends(
-        "line_ids.price_subtotal",
-        "line_ids.price_tax",
-        "line_ids.price_total",
-        "line_ids.cost_total",
-    )
+    @api.depends("line_ids.price_before_discount", "line_ids.discount_amount", "line_ids.price_subtotal", "line_ids.price_tax", "line_ids.price_total", "line_ids.cost_total")
     def _compute_amounts(self):
         for order in self:
-            untaxed = sum(order.line_ids.mapped("price_subtotal"))
-            tax = sum(order.line_ids.mapped("price_tax"))
-            total = sum(order.line_ids.mapped("price_total"))
-            cost = sum(order.line_ids.mapped("cost_total"))
-            order.amount_untaxed = untaxed
-            order.amount_tax = tax
-            order.amount_total = total
-            order.total_cost = cost
-            order.margin = untaxed - cost
-            order.margin_percent = (order.margin / untaxed * 100.0) if untaxed else 0.0
+            order.amount_before_discount = sum(order.line_ids.mapped("price_before_discount"))
+            order.amount_discount = sum(order.line_ids.mapped("discount_amount"))
+            order.amount_untaxed = sum(order.line_ids.mapped("price_subtotal"))
+            order.amount_tax = sum(order.line_ids.mapped("price_tax"))
+            order.amount_total = sum(order.line_ids.mapped("price_total"))
+            order.total_cost = sum(order.line_ids.mapped("cost_total"))
+            order.margin = order.amount_untaxed - order.total_cost
+            order.margin_percent = (order.margin / order.amount_untaxed * 100.0) if order.amount_untaxed else 0.0
 
-    def _compute_erp_counts(self):
+    @api.depends("payment_ids.amount", "payment_ids.state", "amount_total")
+    def _compute_payment(self):
         for order in self:
-            if order.sale_order_id:
-                order.invoice_count = len(order.sale_order_id.invoice_ids)
-                order.picking_count = len(order.sale_order_id.picking_ids)
+            paid = sum(p.amount for p in order.payment_ids if p.state == "posted")
+            order.amount_paid = paid
+            order.balance_due = max(order.amount_total - paid, 0.0)
+            if paid <= 0:
+                order.payment_status = "unpaid"
+            elif order.balance_due > 0.0001:
+                order.payment_status = "partial"
             else:
-                order.invoice_count = 0
-                order.picking_count = 0
+                order.payment_status = "paid"
 
-    @api.constrains("payment_method_id", "payment_reference")
-    def _check_payment_reference(self):
+    @api.depends("line_ids", "payment_ids")
+    def _compute_counts(self):
         for order in self:
-            if order.payment_method_id.requires_reference and not order.payment_reference:
-                raise ValidationError(_("Payment reference is required for the selected payment method."))
+            order.line_count = len(order.line_ids)
+            order.payment_count = len(order.payment_ids)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -151,196 +93,89 @@ class EllaithyPosOrder(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
-        if "line_ids" in vals:
-            blocked = self.filtered(lambda r: r.state not in ("draft", "rejected"))
-            if blocked and not self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_manager"):
-                raise UserError(_("Only a POS Manager can change lines after the request is submitted."))
+        protected = {"line_ids", "customer_id", "warehouse_id", "order_type", "original_order_id"}
+        if protected.intersection(vals):
+            blocked = self.filtered(lambda o: o.state not in ("draft", "rejected"))
+            if blocked and not self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_admin"):
+                raise UserError(_("Only POS Admin can modify order contents after submission."))
         return super().write(vals)
 
     def action_submit(self):
         for order in self:
             if not order.line_ids:
-                raise UserError(_("Add at least one product before submitting the order."))
+                raise UserError(_("Add at least one product."))
             if order.amount_total <= 0:
                 raise UserError(_("Order total must be greater than zero."))
             order.state = "requested"
         return True
 
+    def _require_operator(self):
+        if not (self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_operator") or self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_admin")):
+            raise UserError(_("Only POS Operator or POS Admin can perform this action."))
+
     def action_approve(self):
-        self._require_manager()
+        self._require_operator()
         for order in self:
             if order.state != "requested":
                 raise UserError(_("Only requested orders can be approved."))
-            order.state = "approved"
-            order.message_post(body=_("Order request approved by %s") % self.env.user.display_name)
+            order.write({"state": "approved", "operator_id": self.env.user.id})
+        return True
+
+    def action_start_processing(self):
+        self._require_operator()
+        for order in self:
+            if order.state != "approved":
+                raise UserError(_("Approve the order first."))
+            order.write({"state": "processing", "operator_id": self.env.user.id})
         return True
 
     def action_reject(self):
-        self._require_manager()
+        self._require_operator()
         for order in self:
             if not order.rejection_reason:
-                raise UserError(_("Enter a rejection reason before rejecting the request."))
+                raise UserError(_("Enter a rejection reason first."))
             order.state = "rejected"
-            order.message_post(body=_("Order request rejected by %s") % self.env.user.display_name)
         return True
 
-    def action_reset_to_draft(self):
+    def action_done(self):
+        self._require_operator()
+        Move = self.env["ellaithy.pos.stock.move"]
         for order in self:
-            if order.state not in ("rejected", "cancel"):
-                raise UserError(_("Only rejected or cancelled requests can be reset to draft."))
-            if order.sale_order_id:
-                raise UserError(_("This request already has an ERP Sales Order and cannot be reset."))
-            order.state = "draft"
+            if order.state not in ("approved", "processing"):
+                raise UserError(_("Only approved/processing orders can be completed."))
+            if order.order_type == "sale" and order.balance_due > 0.0001:
+                raise UserError(_("The order must be fully paid before completion."))
+            if order.stock_move_ids.filtered(lambda m: m.posted):
+                raise UserError(_("Stock was already posted for this order."))
+            for line in order.line_ids:
+                if not line.product_id.track_stock:
+                    continue
+                move = Move.create({
+                    "move_type": "sale" if order.order_type == "sale" else "return",
+                    "warehouse_id": order.warehouse_id.id,
+                    "product_id": line.product_id.id,
+                    "quantity": line.quantity,
+                    "direction": "out" if order.order_type == "sale" else "in",
+                    "order_id": order.id,
+                    "note": order.name,
+                })
+                move.action_post()
+            order.write({"state": "done", "completed_date": fields.Datetime.now(), "operator_id": self.env.user.id})
         return True
 
     def action_cancel(self):
         for order in self:
-            if order.sale_order_id and order.sale_order_id.state not in ("draft", "cancel"):
-                raise UserError(_("Cancel the related Sales Order first."))
-            if order.sale_order_id and order.sale_order_id.state == "draft":
-                order.sale_order_id.action_cancel()
+            if order.state == "done":
+                raise UserError(_("Completed orders cannot be cancelled. Create a return order instead."))
             order.state = "cancel"
         return True
 
-    def _require_manager(self):
-        if not self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_manager"):
-            raise UserError(_("Only a POS Manager can perform this action."))
-
-    def _prepare_sale_order_vals(self):
-        self.ensure_one()
-        return {
-            "partner_id": self.partner_id.id,
-            "user_id": self.salesperson_id.id,
-            "warehouse_id": self.warehouse_id.id,
-            "company_id": self.company_id.id,
-            "client_order_ref": self.name,
-            "origin": self.name,
-            "note": self.notes or False,
-            "order_line": [
-                (0, 0, {
-                    "product_id": line.product_id.id,
-                    "name": line.name,
-                    "product_uom_qty": line.quantity,
-                    "product_uom": line.uom_id.id,
-                    "price_unit": line.price_unit,
-                    "discount": line.discount,
-                    "tax_id": [(6, 0, line.tax_ids.ids)],
-                })
-                for line in self.line_ids
-            ],
-        }
-
-    def action_confirm_erp(self):
-        self._require_manager()
-        SaleOrder = self.env["sale.order"]
+    def action_reset_draft(self):
         for order in self:
-            if order.state != "approved":
-                raise UserError(_("Approve the order before confirming it in ERP."))
-            if order.sale_order_id:
-                raise UserError(_("An ERP Sales Order already exists for this request."))
-            sale = SaleOrder.create(order._prepare_sale_order_vals())
-            sale.action_confirm()
-            order.sale_order_id = sale
-            order.state = "confirmed"
-            order.message_post(body=_("ERP Sales Order %s created and confirmed.") % sale.name)
-        return self.action_open_sale_order()
-
-    def action_create_invoice(self):
-        self._require_manager()
-        self.ensure_one()
-        if not self.sale_order_id:
-            raise UserError(_("Create the ERP Sales Order first."))
-        if self.sale_order_id.state not in ("sale", "done"):
-            raise UserError(_("The Sales Order must be confirmed before invoicing."))
-        invoices = self.sale_order_id._create_invoices()
-        if not invoices:
-            raise UserError(_("No invoiceable lines were found."))
-        self.state = "invoiced"
-        if len(invoices) == 1:
-            return {
-                "type": "ir.actions.act_window",
-                "name": _("Customer Invoice"),
-                "res_model": "account.move",
-                "view_mode": "form",
-                "res_id": invoices.id,
-            }
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Customer Invoices"),
-            "res_model": "account.move",
-            "view_mode": "list,form",
-            "domain": [("id", "in", invoices.ids)],
-        }
-
-    def action_mark_done(self):
-        self._require_manager()
-        for order in self:
-            if not order.sale_order_id:
-                raise UserError(_("There is no ERP Sales Order for this request."))
-            open_pickings = order.sale_order_id.picking_ids.filtered(lambda p: p.state not in ("done", "cancel"))
-            unpaid = order.sale_order_id.invoice_ids.filtered(
-                lambda m: m.state == "posted" and m.payment_state not in ("paid", "reversed")
-            )
-            if open_pickings:
-                raise UserError(_("Complete or cancel all deliveries before marking the POS order as done."))
-            if unpaid:
-                raise UserError(_("All posted invoices must be paid before marking the POS order as done."))
-            order.state = "done"
+            if order.state not in ("rejected", "cancel"):
+                raise UserError(_("Only rejected/cancelled orders can be reset."))
+            order.state = "draft"
         return True
-
-    def action_open_sale_order(self):
-        self.ensure_one()
-        if not self.sale_order_id:
-            raise UserError(_("No Sales Order has been created yet."))
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Sales Order"),
-            "res_model": "sale.order",
-            "view_mode": "form",
-            "res_id": self.sale_order_id.id,
-        }
-
-    def action_open_invoices(self):
-        self.ensure_one()
-        invoices = self.sale_order_id.invoice_ids if self.sale_order_id else self.env["account.move"]
-        if not invoices:
-            raise UserError(_("No invoices have been created yet."))
-        if len(invoices) == 1:
-            return {
-                "type": "ir.actions.act_window",
-                "name": _("Customer Invoice"),
-                "res_model": "account.move",
-                "view_mode": "form",
-                "res_id": invoices.id,
-            }
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Customer Invoices"),
-            "res_model": "account.move",
-            "view_mode": "list,form",
-            "domain": [("id", "in", invoices.ids)],
-        }
-
-    def action_open_pickings(self):
-        self.ensure_one()
-        pickings = self.sale_order_id.picking_ids if self.sale_order_id else self.env["stock.picking"]
-        if not pickings:
-            raise UserError(_("No deliveries have been created yet."))
-        if len(pickings) == 1:
-            return {
-                "type": "ir.actions.act_window",
-                "name": _("Delivery"),
-                "res_model": "stock.picking",
-                "view_mode": "form",
-                "res_id": pickings.id,
-            }
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Deliveries"),
-            "res_model": "stock.picking",
-            "view_mode": "list,form",
-            "domain": [("id", "in", pickings.ids)],
-        }
 
 
 class EllaithyPosOrderLine(models.Model):
@@ -348,65 +183,62 @@ class EllaithyPosOrderLine(models.Model):
     _description = "Ellaithy POS Order Line"
     _order = "id"
 
-    order_id = fields.Many2one("ellaithy.pos.order", required=True, ondelete="cascade")
-    company_id = fields.Many2one(related="order_id.company_id", store=True, readonly=True)
-    currency_id = fields.Many2one(related="order_id.currency_id", readonly=True)
-    product_id = fields.Many2one(
-        "product.product",
-        required=True,
-        domain="[('sale_ok', '=', True)]",
-    )
-    name = fields.Char(required=True)
+    order_id = fields.Many2one("ellaithy.pos.order", required=True, ondelete="cascade", index=True)
+    product_id = fields.Many2one("ellaithy.pos.product", required=True, ondelete="restrict", index=True)
+    category_id = fields.Many2one(related="product_id.category_id", store=True, readonly=True)
+    sku = fields.Char(related="product_id.sku", readonly=True)
     quantity = fields.Float(default=1.0, required=True)
-    uom_id = fields.Many2one("uom.uom", string="UoM", required=True)
-    price_unit = fields.Monetary(required=True)
-    discount = fields.Float(default=0.0)
-    tax_ids = fields.Many2many("account.tax", string="Taxes")
-    price_subtotal = fields.Monetary(compute="_compute_amount", store=True)
-    price_tax = fields.Monetary(compute="_compute_amount", store=True)
-    price_total = fields.Monetary(compute="_compute_amount", store=True)
-    standard_price = fields.Float(related="product_id.standard_price", readonly=True)
-    cost_total = fields.Monetary(compute="_compute_amount", store=True)
-    available_qty = fields.Float(compute="_compute_available_qty")
+    unit_price = fields.Float(required=True)
+    discount_percent = fields.Float(string="Discount %", default=0.0)
+    tax_percent = fields.Float(string="Tax %", default=0.0)
+    unit_cost = fields.Float(readonly=True)
+    available_qty = fields.Float(compute="_compute_available")
+    price_before_discount = fields.Float(compute="_compute_values", store=True)
+    discount_amount = fields.Float(compute="_compute_values", store=True)
+    price_subtotal = fields.Float(compute="_compute_values", store=True)
+    price_tax = fields.Float(compute="_compute_values", store=True)
+    price_total = fields.Float(compute="_compute_values", store=True)
+    cost_total = fields.Float(compute="_compute_values", store=True)
+    margin = fields.Float(compute="_compute_values", store=True)
 
     @api.onchange("product_id")
-    def _onchange_product_id(self):
-        if not self.product_id:
-            return
-        self.name = self.product_id.get_product_multiline_description_sale() or self.product_id.display_name
-        self.uom_id = self.product_id.uom_id
-        self.price_unit = self.product_id.lst_price
-        self.tax_ids = self.product_id.taxes_id.filtered(lambda t: t.company_id == self.order_id.company_id)
+    def _onchange_product(self):
+        if self.product_id:
+            self.unit_price = self.product_id.sale_price
+            self.unit_cost = self.product_id.cost_price
+            self.tax_percent = self.product_id.tax_percent
 
     @api.depends("product_id", "order_id.warehouse_id")
-    def _compute_available_qty(self):
+    def _compute_available(self):
+        Balance = self.env["ellaithy.pos.stock.balance"]
         for line in self:
-            if not line.product_id or not line.order_id.warehouse_id:
+            if line.product_id and line.order_id.warehouse_id:
+                bal = Balance.search([("warehouse_id", "=", line.order_id.warehouse_id.id), ("product_id", "=", line.product_id.id)], limit=1)
+                line.available_qty = bal.quantity if bal else 0.0
+            else:
                 line.available_qty = 0.0
-                continue
-            product = line.product_id.with_context(warehouse=line.order_id.warehouse_id.id)
-            line.available_qty = product.qty_available
 
-    @api.depends("quantity", "price_unit", "discount", "tax_ids", "standard_price")
-    def _compute_amount(self):
+    @api.depends("quantity", "unit_price", "discount_percent", "tax_percent", "unit_cost")
+    def _compute_values(self):
         for line in self:
-            discounted_price = line.price_unit * (1.0 - (line.discount or 0.0) / 100.0)
-            taxes = line.tax_ids.compute_all(
-                discounted_price,
-                currency=line.currency_id,
-                quantity=line.quantity,
-                product=line.product_id,
-                partner=line.order_id.partner_id,
-            )
-            line.price_subtotal = taxes["total_excluded"]
-            line.price_tax = taxes["total_included"] - taxes["total_excluded"]
-            line.price_total = taxes["total_included"]
-            line.cost_total = line.standard_price * line.quantity
+            gross = line.quantity * line.unit_price
+            discount = gross * line.discount_percent / 100.0
+            subtotal = gross - discount
+            tax = subtotal * line.tax_percent / 100.0
+            line.price_before_discount = gross
+            line.discount_amount = discount
+            line.price_subtotal = subtotal
+            line.price_tax = tax
+            line.price_total = subtotal + tax
+            line.cost_total = line.quantity * line.unit_cost
+            line.margin = subtotal - line.cost_total
 
-    @api.constrains("quantity", "discount")
+    @api.constrains("quantity", "discount_percent", "tax_percent")
     def _check_values(self):
         for line in self:
             if line.quantity <= 0:
                 raise ValidationError(_("Quantity must be greater than zero."))
-            if line.discount < 0 or line.discount > 100:
-                raise ValidationError(_("Discount must be between 0 and 100 percent."))
+            if not 0 <= line.discount_percent <= 100:
+                raise ValidationError(_("Discount must be between 0 and 100%."))
+            if not 0 <= line.tax_percent <= 100:
+                raise ValidationError(_("Tax must be between 0 and 100%."))

@@ -2,54 +2,71 @@
 <odoo>
     <record id="module_category_ellaithy_pos" model="ir.module.category">
         <field name="name">Ellaithy POS</field>
-        <field name="description">Permissions for Ellaithy POS and order requests.</field>
-        <field name="sequence">30</field>
+        <field name="sequence">35</field>
     </record>
 
-    <record id="group_ellaithy_pos_user" model="res.groups">
-        <field name="name">POS User</field>
+    <record id="group_ellaithy_pos_requester" model="res.groups">
+        <field name="name">Requester</field>
         <field name="category_id" ref="module_category_ellaithy_pos"/>
     </record>
 
-    <record id="group_ellaithy_pos_manager" model="res.groups">
-        <field name="name">POS Manager</field>
+    <record id="group_ellaithy_pos_operator" model="res.groups">
+        <field name="name">POS Operator</field>
         <field name="category_id" ref="module_category_ellaithy_pos"/>
-        <field name="implied_ids" eval="[(4, ref('group_ellaithy_pos_user'))]"/>
+        <field name="implied_ids" eval="[(4, ref('ellaithy_pos.group_ellaithy_pos_requester'))]"/>
     </record>
 
-    <record id="rule_ellaithy_pos_order_user" model="ir.rule">
-        <field name="name">POS User: own requests</field>
-        <field name="model_id" ref="model_ellaithy_pos_order"/>
-        <field name="groups" eval="[(4, ref('group_ellaithy_pos_user'))]"/>
-        <field name="domain_force">['|', ('user_id', '=', user.id), ('salesperson_id', '=', user.id)]</field>
-        <field name="perm_read" eval="True"/>
-        <field name="perm_write" eval="True"/>
-        <field name="perm_create" eval="True"/>
-        <field name="perm_unlink" eval="False"/>
+    <record id="group_ellaithy_pos_admin" model="res.groups">
+        <field name="name">POS Admin</field>
+        <field name="category_id" ref="module_category_ellaithy_pos"/>
+        <field name="implied_ids" eval="[(4, ref('ellaithy_pos.group_ellaithy_pos_operator'))]"/>
     </record>
 
-    <record id="rule_ellaithy_pos_order_manager" model="ir.rule">
-        <field name="name">POS Manager: all requests</field>
+    <record id="rule_order_requester_own" model="ir.rule">
+        <field name="name">Requester sees own POS orders</field>
         <field name="model_id" ref="model_ellaithy_pos_order"/>
-        <field name="groups" eval="[(4, ref('group_ellaithy_pos_manager'))]"/>
+        <field name="groups" eval="[(4, ref('ellaithy_pos.group_ellaithy_pos_requester'))]"/>
+        <field name="domain_force">[('requester_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/><field name="perm_write" eval="True"/><field name="perm_create" eval="True"/><field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_order_operator_all" model="ir.rule">
+        <field name="name">POS Operator sees all orders</field>
+        <field name="model_id" ref="model_ellaithy_pos_order"/>
+        <field name="groups" eval="[(4, ref('ellaithy_pos.group_ellaithy_pos_operator'))]"/>
         <field name="domain_force">[(1, '=', 1)]</field>
-        <field name="perm_read" eval="True"/>
-        <field name="perm_write" eval="True"/>
-        <field name="perm_create" eval="True"/>
-        <field name="perm_unlink" eval="True"/>
     </record>
 
-    <record id="rule_ellaithy_pos_line_user" model="ir.rule">
-        <field name="name">POS User: own request lines</field>
-        <field name="model_id" ref="model_ellaithy_pos_order_line"/>
-        <field name="groups" eval="[(4, ref('group_ellaithy_pos_user'))]"/>
-        <field name="domain_force">['|', ('order_id.user_id', '=', user.id), ('order_id.salesperson_id', '=', user.id)]</field>
+    <record id="rule_order_admin_all" model="ir.rule">
+        <field name="name">POS Admin sees all orders</field>
+        <field name="model_id" ref="model_ellaithy_pos_order"/>
+        <field name="groups" eval="[(4, ref('ellaithy_pos.group_ellaithy_pos_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
     </record>
 
-    <record id="rule_ellaithy_pos_line_manager" model="ir.rule">
-        <field name="name">POS Manager: all request lines</field>
+    <record id="rule_line_requester_own" model="ir.rule">
+        <field name="name">Requester sees own order lines</field>
         <field name="model_id" ref="model_ellaithy_pos_order_line"/>
-        <field name="groups" eval="[(4, ref('group_ellaithy_pos_manager'))]"/>
+        <field name="groups" eval="[(4, ref('ellaithy_pos.group_ellaithy_pos_requester'))]"/>
+        <field name="domain_force">[('order_id.requester_id', '=', user.id)]</field>
+    </record>
+    <record id="rule_line_operator_all" model="ir.rule">
+        <field name="name">POS Operator sees all order lines</field>
+        <field name="model_id" ref="model_ellaithy_pos_order_line"/>
+        <field name="groups" eval="[(4, ref('ellaithy_pos.group_ellaithy_pos_operator'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_payment_requester_own" model="ir.rule">
+        <field name="name">Requester sees own order payments</field>
+        <field name="model_id" ref="model_ellaithy_pos_payment"/>
+        <field name="groups" eval="[(4, ref('ellaithy_pos.group_ellaithy_pos_requester'))]"/>
+        <field name="domain_force">[('order_id.requester_id', '=', user.id)]</field>
+    </record>
+    <record id="rule_payment_operator_all" model="ir.rule">
+        <field name="name">POS Operator sees all payments</field>
+        <field name="model_id" ref="model_ellaithy_pos_payment"/>
+        <field name="groups" eval="[(4, ref('ellaithy_pos.group_ellaithy_pos_operator'))]"/>
         <field name="domain_force">[(1, '=', 1)]</field>
     </record>
 </odoo>
