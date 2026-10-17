@@ -1,7 +1,7 @@
 {
     "name": "Ellaithy POS",
     "summary": "Standalone POS, order requests, inventory, payments, reporting and analytics",
-    "version": "18.0.2.0.0",
+    "version": "18.0.2.0.1",
     "category": "Sales/Point of Sale",
     "author": "Ellaithy Auto Group",
     "license": "LGPL-3",

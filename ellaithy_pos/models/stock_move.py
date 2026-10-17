@@ -11,11 +11,11 @@ class EllaithyPosStockBalance(models.Model):
     product_id = fields.Many2one("ellaithy.pos.product", required=True, ondelete="cascade", index=True)
     quantity = fields.Float(default=0.0)
     minimum_stock = fields.Float(related="product_id.minimum_stock", readonly=True)
-    low_stock = fields.Boolean(compute="_compute_low_stock")
+    low_stock = fields.Boolean(compute="_compute_low_stock", store=True, index=True)
 
     _sql_constraints = [("stock_balance_unique", "unique(warehouse_id, product_id)", "A stock balance already exists for this product and warehouse.")]
 
-    @api.depends("quantity", "minimum_stock")
+    @api.depends("quantity", "product_id.minimum_stock")
     def _compute_low_stock(self):
         for rec in self:
             rec.low_stock = rec.quantity <= rec.minimum_stock
