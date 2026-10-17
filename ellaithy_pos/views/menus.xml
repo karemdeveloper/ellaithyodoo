@@ -1,37 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <menuitem id="menu_ellaithy_pos_root" name="Ellaithy POS" sequence="25" groups="ellaithy_pos.group_ellaithy_pos_requester"/>
-
     <menuitem id="menu_pos_orders_root" name="Orders" parent="menu_ellaithy_pos_root" sequence="10"/>
     <menuitem id="menu_pos_my_orders" name="My Orders" parent="menu_pos_orders_root" action="action_pos_my_orders" sequence="10"/>
     <menuitem id="menu_pos_queue" name="Order Queue" parent="menu_pos_orders_root" action="action_pos_requested_orders" sequence="20" groups="ellaithy_pos.group_ellaithy_pos_operator"/>
-    <menuitem id="menu_pos_all_orders" name="All Orders" parent="menu_pos_orders_root" action="action_pos_all_orders" sequence="30" groups="ellaithy_pos.group_ellaithy_pos_operator"/>
-
-    <menuitem id="menu_pos_customers" name="Customers" parent="menu_ellaithy_pos_root" action="action_pos_customers" sequence="20"/>
+    <menuitem id="menu_pos_salary_orders" name="From Salary" parent="menu_pos_orders_root" action="action_pos_salary_orders" sequence="30" groups="ellaithy_pos.group_ellaithy_pos_operator"/>
+    <menuitem id="menu_pos_all_orders" name="All Orders" parent="menu_pos_orders_root" action="action_pos_all_orders" sequence="40" groups="ellaithy_pos.group_ellaithy_pos_admin"/>
 
     <menuitem id="menu_pos_inventory_root" name="Inventory" parent="menu_ellaithy_pos_root" sequence="30" groups="ellaithy_pos.group_ellaithy_pos_operator"/>
     <menuitem id="menu_pos_current_stock" name="Current Stock" parent="menu_pos_inventory_root" action="action_pos_stock_balances" sequence="10"/>
     <menuitem id="menu_pos_stock_moves" name="Stock Movements" parent="menu_pos_inventory_root" action="action_pos_stock_moves" sequence="20"/>
     <menuitem id="menu_pos_stock_adjustment" name="Stock Adjustment" parent="menu_pos_inventory_root" action="action_pos_stock_adjustment" sequence="30" groups="ellaithy_pos.group_ellaithy_pos_admin"/>
 
-    <menuitem id="menu_pos_payments_root" name="Payments" parent="menu_ellaithy_pos_root" sequence="40" groups="ellaithy_pos.group_ellaithy_pos_operator"/>
-    <menuitem id="menu_pos_payments" name="Payment Transactions" parent="menu_pos_payments_root" action="action_pos_payments" sequence="10"/>
-
     <menuitem id="menu_pos_reports_root" name="Reports" parent="menu_ellaithy_pos_root" sequence="60" groups="ellaithy_pos.group_ellaithy_pos_operator"/>
     <menuitem id="menu_pos_sales_analysis" name="Sales Analysis" parent="menu_pos_reports_root" action="action_pos_sales_analysis" sequence="10"/>
     <menuitem id="menu_pos_product_sales" name="Product Sales" parent="menu_pos_reports_root" action="action_pos_product_sales" sequence="20"/>
-    <menuitem id="menu_pos_payment_analysis" name="Payment Analysis" parent="menu_pos_reports_root" action="action_pos_payment_analysis" sequence="30"/>
-    <menuitem id="menu_pos_stock_analysis" name="Stock Movement Analysis" parent="menu_pos_reports_root" action="action_pos_stock_analysis" sequence="40"/>
+    <menuitem id="menu_pos_stock_analysis" name="Stock Movement Analysis" parent="menu_pos_reports_root" action="action_pos_stock_analysis" sequence="30"/>
 
     <menuitem id="menu_pos_charts_root" name="Charts" parent="menu_ellaithy_pos_root" sequence="70" groups="ellaithy_pos.group_ellaithy_pos_operator"/>
     <menuitem id="menu_pos_chart_sales_trend" name="Sales Trend" parent="menu_pos_charts_root" action="action_pos_sales_trend_chart" sequence="10"/>
     <menuitem id="menu_pos_chart_status" name="Orders by Status" parent="menu_pos_charts_root" action="action_pos_order_status_chart" sequence="20"/>
     <menuitem id="menu_pos_chart_product" name="Product Performance" parent="menu_pos_charts_root" action="action_pos_product_chart" sequence="30"/>
-    <menuitem id="menu_pos_chart_payment" name="Payments by Method" parent="menu_pos_charts_root" action="action_pos_payment_chart" sequence="40"/>
 
     <menuitem id="menu_pos_configuration" name="Configuration" parent="menu_ellaithy_pos_root" sequence="90" groups="ellaithy_pos.group_ellaithy_pos_admin"/>
     <menuitem id="menu_pos_products" name="Products" parent="menu_pos_configuration" action="action_pos_products" sequence="10"/>
     <menuitem id="menu_pos_categories" name="Categories" parent="menu_pos_configuration" action="action_pos_categories" sequence="20"/>
     <menuitem id="menu_pos_warehouses" name="Warehouses" parent="menu_pos_configuration" action="action_pos_warehouses" sequence="30"/>
-    <menuitem id="menu_pos_payment_methods" name="Payment Methods" parent="menu_pos_configuration" action="action_pos_payment_methods" sequence="40"/>
 </odoo>

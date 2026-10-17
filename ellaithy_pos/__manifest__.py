@@ -1,11 +1,11 @@
 {
     "name": "Ellaithy POS",
     "summary": "Standalone POS, order requests, inventory, payments, reporting and analytics",
-    "version": "18.0.2.0.1",
+    "version": "18.0.3.0.0",
     "category": "Sales/Point of Sale",
     "author": "Ellaithy Auto Group",
     "license": "LGPL-3",
-    "depends": ["base", "mail"],
+    "depends": ["base", "mail", "crm_customization"],
     "data": [
         "security/ellaithy_pos_security.xml",
         "security/ir.model.access.csv",
@@ -14,7 +14,6 @@
         "views/master_data_views.xml",
         "views/pos_order_views.xml",
         "views/stock_views.xml",
-        "views/payment_views.xml",
         "views/report_views.xml",
         "views/menus.xml",
     ],

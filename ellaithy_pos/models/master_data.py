@@ -22,10 +22,11 @@ class EllaithyPosWarehouse(models.Model):
     code = fields.Char(required=True, index=True)
     active = fields.Boolean(default=True)
     location = fields.Char()
+    branch_id = fields.Many2one("res.branch", string="Branch", required=True, ondelete="restrict", index=True)
     responsible_id = fields.Many2one("res.users", string="Responsible User")
     note = fields.Text()
 
-    _sql_constraints = [("warehouse_code_unique", "unique(code)", "Warehouse code must be unique.")]
+    _sql_constraints = [("warehouse_code_unique", "unique(code)", "Warehouse code must be unique."), ("warehouse_branch_unique", "unique(branch_id)", "Only one Ellaithy POS warehouse is allowed per branch.")]
 
 
 class EllaithyPosCustomer(models.Model):

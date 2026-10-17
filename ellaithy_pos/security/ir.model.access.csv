@@ -22,3 +22,5 @@ access_stock_move_admin,ellaithy.pos.stock.move admin,model_ellaithy_pos_stock_m
 access_payment_requester,ellaithy.pos.payment requester,model_ellaithy_pos_payment,group_ellaithy_pos_requester,1,0,0,0
 access_payment_operator,ellaithy.pos.payment operator,model_ellaithy_pos_payment,group_ellaithy_pos_operator,1,1,1,0
 access_payment_admin,ellaithy.pos.payment admin,model_ellaithy_pos_payment,group_ellaithy_pos_admin,1,1,1,1
+access_complete_wizard_operator,ellaithy.pos.complete.wizard operator,model_ellaithy_pos_complete_wizard,group_ellaithy_pos_operator,1,1,1,1
+access_complete_wizard_admin,ellaithy.pos.complete.wizard admin,model_ellaithy_pos_complete_wizard,group_ellaithy_pos_admin,1,1,1,1

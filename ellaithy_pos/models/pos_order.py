@@ -9,25 +9,36 @@ class EllaithyPosOrder(models.Model):
     _order = "id desc"
 
     name = fields.Char(default=lambda self: _("New"), required=True, readonly=True, copy=False, tracking=True)
-    order_type = fields.Selection([("sale", "Sale"), ("return", "Return")], default="sale", required=True, tracking=True)
-    original_order_id = fields.Many2one("ellaithy.pos.order", string="Original Sale", domain="[('order_type','=','sale'),('state','=','done')]", tracking=True)
     state = fields.Selection([
-        ("draft", "Draft"), ("requested", "Requested"), ("approved", "Approved"),
-        ("processing", "Processing"), ("done", "Done"), ("rejected", "Rejected"), ("cancel", "Cancelled")
+        ("draft", "Draft"),
+        ("requested", "Requested"),
+        ("processing", "Processing"),
+        ("done", "Done"),
+        ("rejected", "Rejected"),
+        ("cancel", "Cancelled"),
     ], default="draft", required=True, tracking=True, index=True)
     request_date = fields.Datetime(default=fields.Datetime.now, required=True, tracking=True, index=True)
     completed_date = fields.Datetime(readonly=True, tracking=True)
     requester_id = fields.Many2one("res.users", default=lambda self: self.env.user, required=True, readonly=True, tracking=True)
-    operator_id = fields.Many2one("res.users", string="POS Operator", readonly=True, tracking=True)
-    customer_id = fields.Many2one("ellaithy.pos.customer", required=True, ondelete="restrict", tracking=True)
-    warehouse_id = fields.Many2one("ellaithy.pos.warehouse", required=True, ondelete="restrict", tracking=True)
-    payment_method_id = fields.Many2one("ellaithy.pos.payment.method", tracking=True)
-    payment_reference = fields.Char(tracking=True)
+    operator_id = fields.Many2one("res.users", string="Operator", readonly=True, tracking=True)
+    branch_id = fields.Many2one("res.branch", string="Branch", readonly=True, tracking=True, index=True)
+    warehouse_id = fields.Many2one("ellaithy.pos.warehouse", required=True, ondelete="restrict", readonly=True, tracking=True)
     notes = fields.Text()
     rejection_reason = fields.Text(tracking=True)
 
+    settlement_type = fields.Selection([
+        ("paid", "Paid"),
+        ("salary", "From Salary"),
+    ], string="Completion Payment", readonly=True, tracking=True, index=True)
+    salary_paid = fields.Boolean(string="Salary Settled", default=False, readonly=True, tracking=True, index=True)
+    salary_paid_date = fields.Datetime(readonly=True, tracking=True)
+    salary_paid_by = fields.Many2one("res.users", readonly=True, tracking=True)
+    salary_amount = fields.Float(compute="_compute_salary_amount", store=True)
+    amount_paid = fields.Float(compute="_compute_settlement_amounts", store=True)
+    balance_due = fields.Float(compute="_compute_settlement_amounts", store=True)
+    payment_status = fields.Selection([("unpaid", "Unpaid"), ("paid", "Paid"), ("salary", "From Salary")], compute="_compute_settlement_amounts", store=True)
+
     line_ids = fields.One2many("ellaithy.pos.order.line", "order_id", copy=True)
-    payment_ids = fields.One2many("ellaithy.pos.payment", "order_id")
     stock_move_ids = fields.One2many("ellaithy.pos.stock.move", "order_id")
 
     amount_before_discount = fields.Float(compute="_compute_amounts", store=True)
@@ -38,11 +49,7 @@ class EllaithyPosOrder(models.Model):
     total_cost = fields.Float(compute="_compute_amounts", store=True)
     margin = fields.Float(compute="_compute_amounts", store=True)
     margin_percent = fields.Float(compute="_compute_amounts", store=True)
-    amount_paid = fields.Float(compute="_compute_payment", store=True)
-    balance_due = fields.Float(compute="_compute_payment", store=True)
-    payment_status = fields.Selection([("unpaid", "Unpaid"), ("partial", "Partially Paid"), ("paid", "Paid")], compute="_compute_payment", store=True)
     line_count = fields.Integer(compute="_compute_counts")
-    payment_count = fields.Integer(compute="_compute_counts")
 
     is_operator = fields.Boolean(compute="_compute_roles")
     is_admin = fields.Boolean(compute="_compute_roles")
@@ -53,6 +60,32 @@ class EllaithyPosOrder(models.Model):
         for rec in self:
             rec.is_operator = op or admin
             rec.is_admin = admin
+
+    @api.depends("settlement_type", "salary_paid", "amount_total", "state")
+    def _compute_settlement_amounts(self):
+        for order in self:
+            if order.state == "done" and order.settlement_type == "paid":
+                order.amount_paid = order.amount_total
+                order.balance_due = 0.0
+                order.payment_status = "paid"
+            elif order.state == "done" and order.settlement_type == "salary":
+                if order.salary_paid:
+                    order.amount_paid = order.amount_total
+                    order.balance_due = 0.0
+                    order.payment_status = "paid"
+                else:
+                    order.amount_paid = 0.0
+                    order.balance_due = order.amount_total
+                    order.payment_status = "salary"
+            else:
+                order.amount_paid = 0.0
+                order.balance_due = order.amount_total
+                order.payment_status = "unpaid"
+
+    @api.depends("settlement_type", "salary_paid", "amount_total", "state")
+    def _compute_salary_amount(self):
+        for order in self:
+            order.salary_amount = order.amount_total if order.state == "done" and order.settlement_type == "salary" and not order.salary_paid else 0.0
 
     @api.depends("line_ids.price_before_discount", "line_ids.discount_amount", "line_ids.price_subtotal", "line_ids.price_tax", "line_ids.price_total", "line_ids.cost_total")
     def _compute_amounts(self):
@@ -66,34 +99,37 @@ class EllaithyPosOrder(models.Model):
             order.margin = order.amount_untaxed - order.total_cost
             order.margin_percent = (order.margin / order.amount_untaxed * 100.0) if order.amount_untaxed else 0.0
 
-    @api.depends("payment_ids.amount", "payment_ids.state", "amount_total")
-    def _compute_payment(self):
-        for order in self:
-            paid = sum(p.amount for p in order.payment_ids if p.state == "posted")
-            order.amount_paid = paid
-            order.balance_due = max(order.amount_total - paid, 0.0)
-            if paid <= 0:
-                order.payment_status = "unpaid"
-            elif order.balance_due > 0.0001:
-                order.payment_status = "partial"
-            else:
-                order.payment_status = "paid"
-
-    @api.depends("line_ids", "payment_ids")
+    @api.depends("line_ids")
     def _compute_counts(self):
         for order in self:
             order.line_count = len(order.line_ids)
-            order.payment_count = len(order.payment_ids)
+
+    @api.model
+    def _warehouse_for_user(self, user):
+        branch = user.branch_id
+        if not branch:
+            raise UserError(_("Your user has no branch configured. Please ask the administrator to assign your branch first."))
+        warehouse = self.env["ellaithy.pos.warehouse"].sudo().search([
+            ("branch_id", "=", branch.id),
+            ("active", "=", True),
+        ], limit=1)
+        if not warehouse:
+            raise UserError(_("No Ellaithy POS warehouse is configured for branch %s.") % branch.display_name)
+        return branch, warehouse
 
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            requester = self.env["res.users"].browse(vals.get("requester_id")) if vals.get("requester_id") else self.env.user
+            branch, warehouse = self._warehouse_for_user(requester)
+            vals["branch_id"] = branch.id
+            vals["warehouse_id"] = warehouse.id
             if vals.get("name", _("New")) == _("New"):
                 vals["name"] = self.env["ir.sequence"].next_by_code("ellaithy.pos.order") or _("New")
         return super().create(vals_list)
 
     def write(self, vals):
-        protected = {"line_ids", "customer_id", "warehouse_id", "order_type", "original_order_id"}
+        protected = {"line_ids", "warehouse_id", "branch_id", "requester_id"}
         if protected.intersection(vals):
             blocked = self.filtered(lambda o: o.state not in ("draft", "rejected"))
             if blocked and not self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_admin"):
@@ -106,32 +142,27 @@ class EllaithyPosOrder(models.Model):
                 raise UserError(_("Add at least one product."))
             if order.amount_total <= 0:
                 raise UserError(_("Order total must be greater than zero."))
-            order.state = "requested"
+            branch, warehouse = order._warehouse_for_user(order.requester_id)
+            order.write({"branch_id": branch.id, "warehouse_id": warehouse.id, "state": "requested"})
         return True
 
     def _require_operator(self):
         if not (self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_operator") or self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_admin")):
             raise UserError(_("Only POS Operator or POS Admin can perform this action."))
 
-    def action_approve(self):
-        self._require_operator()
-        for order in self:
-            if order.state != "requested":
-                raise UserError(_("Only requested orders can be approved."))
-            order.write({"state": "approved", "operator_id": self.env.user.id})
-        return True
-
     def action_start_processing(self):
         self._require_operator()
         for order in self:
-            if order.state != "approved":
-                raise UserError(_("Approve the order first."))
+            if order.state != "requested":
+                raise UserError(_("Only requested orders can be moved to processing."))
             order.write({"state": "processing", "operator_id": self.env.user.id})
         return True
 
     def action_reject(self):
         self._require_operator()
         for order in self:
+            if order.state not in ("requested", "processing"):
+                raise UserError(_("Only requested/processing orders can be rejected."))
             if not order.rejection_reason:
                 raise UserError(_("Enter a rejection reason first."))
             order.state = "rejected"
@@ -139,34 +170,74 @@ class EllaithyPosOrder(models.Model):
 
     def action_done(self):
         self._require_operator()
+        self.ensure_one()
+        if self.state != "processing":
+            raise UserError(_("Move the order to Processing first."))
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Complete Order"),
+            "res_model": "ellaithy.pos.complete.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"default_order_id": self.id},
+        }
+
+    def _complete_with_settlement(self, settlement_type):
+        self._require_operator()
         Move = self.env["ellaithy.pos.stock.move"]
         for order in self:
-            if order.state not in ("approved", "processing"):
-                raise UserError(_("Only approved/processing orders can be completed."))
-            if order.order_type == "sale" and order.balance_due > 0.0001:
-                raise UserError(_("The order must be fully paid before completion."))
+            if order.state != "processing":
+                raise UserError(_("Only processing orders can be completed."))
+            if settlement_type not in ("paid", "salary"):
+                raise UserError(_("Choose Paid or From Salary."))
             if order.stock_move_ids.filtered(lambda m: m.posted):
                 raise UserError(_("Stock was already posted for this order."))
             for line in order.line_ids:
                 if not line.product_id.track_stock:
                     continue
                 move = Move.create({
-                    "move_type": "sale" if order.order_type == "sale" else "return",
+                    "move_type": "sale",
                     "warehouse_id": order.warehouse_id.id,
                     "product_id": line.product_id.id,
                     "quantity": line.quantity,
-                    "direction": "out" if order.order_type == "sale" else "in",
+                    "direction": "out",
                     "order_id": order.id,
                     "note": order.name,
                 })
                 move.action_post()
-            order.write({"state": "done", "completed_date": fields.Datetime.now(), "operator_id": self.env.user.id})
+            vals = {
+                "state": "done",
+                "completed_date": fields.Datetime.now(),
+                "operator_id": self.env.user.id,
+                "settlement_type": settlement_type,
+            }
+            if settlement_type == "paid":
+                vals.update({"salary_paid": False, "salary_paid_date": False, "salary_paid_by": False})
+            order.write(vals)
         return True
+
+    def action_mark_salary_paid(self):
+        if not (self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_operator") or self.env.user.has_group("ellaithy_pos.group_ellaithy_pos_admin")):
+            raise UserError(_("Only POS Operator or POS Admin can settle salary orders."))
+        for order in self:
+            if order.state != "done" or order.settlement_type != "salary":
+                raise UserError(_("Only completed From Salary orders can be marked paid."))
+            if not order.salary_paid:
+                order.write({
+                    "salary_paid": True,
+                    "salary_paid_date": fields.Datetime.now(),
+                    "salary_paid_by": self.env.user.id,
+                })
+        return True
+
+    def action_export_salary_excel(self):
+        ids = ",".join(str(x) for x in self.ids)
+        return {"type": "ir.actions.act_url", "url": f"/ellaithy_pos/salary_export?ids={ids}", "target": "self"}
 
     def action_cancel(self):
         for order in self:
             if order.state == "done":
-                raise UserError(_("Completed orders cannot be cancelled. Create a return order instead."))
+                raise UserError(_("Completed orders cannot be cancelled."))
             order.state = "cancel"
         return True
 
@@ -242,3 +313,19 @@ class EllaithyPosOrderLine(models.Model):
                 raise ValidationError(_("Discount must be between 0 and 100%."))
             if not 0 <= line.tax_percent <= 100:
                 raise ValidationError(_("Tax must be between 0 and 100%."))
+
+
+class EllaithyPosCompleteWizard(models.TransientModel):
+    _name = "ellaithy.pos.complete.wizard"
+    _description = "Complete Ellaithy POS Order"
+
+    order_id = fields.Many2one("ellaithy.pos.order", required=True, readonly=True)
+    settlement_type = fields.Selection([
+        ("paid", "Paid"),
+        ("salary", "From Salary"),
+    ], string="Payment", required=True, default="paid")
+
+    def action_confirm(self):
+        self.ensure_one()
+        self.order_id._complete_with_settlement(self.settlement_type)
+        return {"type": "ir.actions.act_window_close"}

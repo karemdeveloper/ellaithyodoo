@@ -1,63 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_pos_order_search" model="ir.ui.view">
-        <field name="name">ellaithy.pos.order.search</field><field name="model">ellaithy.pos.order</field>
-        <field name="arch" type="xml"><search>
-            <field name="name"/><field name="customer_id"/><field name="requester_id"/><field name="operator_id"/><field name="warehouse_id"/><field name="state"/><field name="payment_status"/>
-            <filter name="my_orders" string="My Orders" domain="[('requester_id','=',uid)]"/>
-            <filter name="requested" string="Requested" domain="[('state','=','requested')]"/>
-            <filter name="processing" string="Processing" domain="[('state','in',('approved','processing'))]"/>
-            <filter name="done" string="Done" domain="[('state','=','done')]"/>
-            <filter name="unpaid" string="Unpaid / Partial" domain="[('payment_status','!=','paid')]"/>
-            <separator/>
-            <filter name="group_state" string="Status" context="{'group_by':'state'}"/>
-            <filter name="group_requester" string="Requester" context="{'group_by':'requester_id'}"/>
-            <filter name="group_operator" string="Operator" context="{'group_by':'operator_id'}"/>
-            <filter name="group_warehouse" string="Warehouse" context="{'group_by':'warehouse_id'}"/>
-            <filter name="group_month" string="Month" context="{'group_by':'request_date:month'}"/>
-        </search></field>
+        <field name="name">ellaithy.pos.order.search</field>
+        <field name="model">ellaithy.pos.order</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/><field name="requester_id"/><field name="branch_id"/><field name="warehouse_id"/><field name="operator_id"/><field name="state"/>
+                <filter name="my_orders" string="My Orders" domain="[('requester_id','=',uid)]"/>
+                <filter name="requested" string="Requested" domain="[('state','=','requested')]"/>
+                <filter name="processing" string="Processing" domain="[('state','=','processing')]"/>
+                <filter name="done" string="Done" domain="[('state','=','done')]"/>
+                <separator/>
+                <filter name="group_state" string="Status" context="{'group_by':'state'}"/>
+                <filter name="group_requester" string="Requester" context="{'group_by':'requester_id'}"/>
+                <filter name="group_branch" string="Branch" context="{'group_by':'branch_id'}"/>
+                <filter name="group_warehouse" string="Warehouse" context="{'group_by':'warehouse_id'}"/>
+            </search>
+        </field>
     </record>
 
-    <record id="view_pos_order_list" model="ir.ui.view"><field name="name">ellaithy.pos.order.list</field><field name="model">ellaithy.pos.order</field><field name="arch" type="xml"><list decoration-success="state == 'done'" decoration-warning="state == 'requested'" decoration-danger="state == 'rejected'"><field name="name"/><field name="request_date"/><field name="order_type"/><field name="customer_id"/><field name="requester_id"/><field name="operator_id"/><field name="warehouse_id"/><field name="amount_total" sum="Total"/><field name="amount_paid" sum="Paid"/><field name="balance_due" sum="Balance"/><field name="payment_status" widget="badge"/><field name="state" widget="badge"/></list></field></record>
+    <record id="view_pos_order_list" model="ir.ui.view">
+        <field name="name">ellaithy.pos.order.list</field><field name="model">ellaithy.pos.order</field>
+        <field name="arch" type="xml"><list decoration-success="state == 'done'" decoration-warning="state == 'requested'">
+            <field name="name"/><field name="request_date"/><field name="requester_id"/><field name="branch_id"/><field name="warehouse_id"/><field name="operator_id"/><field name="amount_total" sum="Total"/><field name="settlement_type"/><field name="state" widget="badge"/>
+        </list></field>
+    </record>
 
-    <record id="view_pos_order_kanban" model="ir.ui.view"><field name="name">ellaithy.pos.order.kanban</field><field name="model">ellaithy.pos.order</field><field name="arch" type="xml"><kanban default_group_by="state" class="o_kanban_small_column"><field name="name"/><field name="customer_id"/><field name="amount_total"/><field name="balance_due"/><field name="requester_id"/><field name="warehouse_id"/><field name="state"/><templates><t t-name="card"><div class="fw-bold fs-5"><field name="name"/></div><div><field name="customer_id"/></div><div class="mt-2"><strong>Total: </strong><field name="amount_total"/></div><div><strong>Balance: </strong><field name="balance_due"/></div><div><strong>Requester: </strong><field name="requester_id"/></div><div><field name="warehouse_id"/></div></t></templates></kanban></field></record>
+    <record id="view_pos_order_kanban" model="ir.ui.view"><field name="name">ellaithy.pos.order.kanban</field><field name="model">ellaithy.pos.order</field><field name="arch" type="xml"><kanban default_group_by="state" class="o_kanban_small_column"><field name="name"/><field name="amount_total"/><field name="requester_id"/><field name="branch_id"/><field name="warehouse_id"/><field name="state"/><templates><t t-name="card"><div class="fw-bold fs-5"><field name="name"/></div><div class="mt-2"><strong>Requester: </strong><field name="requester_id"/></div><div><strong>Branch: </strong><field name="branch_id"/></div><div><strong>Warehouse: </strong><field name="warehouse_id"/></div><div><strong>Total: </strong><field name="amount_total"/></div></t></templates></kanban></field></record>
 
     <record id="view_pos_order_form" model="ir.ui.view">
         <field name="name">ellaithy.pos.order.form</field><field name="model">ellaithy.pos.order</field>
         <field name="arch" type="xml"><form string="Ellaithy POS Order">
             <header>
                 <button name="action_submit" type="object" string="Submit Request" class="btn-primary" invisible="state not in ('draft','rejected')"/>
-                <button name="action_approve" type="object" string="Approve" class="btn-primary" groups="ellaithy_pos.group_ellaithy_pos_operator" invisible="state != 'requested'"/>
-                <button name="action_reject" type="object" string="Reject" groups="ellaithy_pos.group_ellaithy_pos_operator" invisible="state != 'requested'"/>
-                <button name="action_start_processing" type="object" string="Start Processing" class="btn-primary" groups="ellaithy_pos.group_ellaithy_pos_operator" invisible="state != 'approved'"/>
-                <button name="action_done" type="object" string="Complete Order" class="btn-primary" groups="ellaithy_pos.group_ellaithy_pos_operator" invisible="state not in ('approved','processing')"/>
+                <button name="action_start_processing" type="object" string="Start Processing" class="btn-primary" groups="ellaithy_pos.group_ellaithy_pos_operator" invisible="state != 'requested'"/>
+                <button name="action_done" type="object" string="Complete" class="btn-success" groups="ellaithy_pos.group_ellaithy_pos_operator" invisible="state != 'processing'"/>
+                <button name="action_reject" type="object" string="Reject" groups="ellaithy_pos.group_ellaithy_pos_operator" invisible="state not in ('requested','processing')"/>
                 <button name="action_reset_draft" type="object" string="Reset to Draft" invisible="state not in ('rejected','cancel')"/>
                 <button name="action_cancel" type="object" string="Cancel" invisible="state in ('done','cancel')"/>
-                <field name="state" widget="statusbar" statusbar_visible="draft,requested,approved,processing,done"/>
+                <field name="state" widget="statusbar" statusbar_visible="draft,requested,processing,done"/>
             </header>
             <sheet>
                 <field name="is_operator" invisible="1"/><field name="is_admin" invisible="1"/>
                 <div class="oe_title"><label for="name"/><h1><field name="name"/></h1></div>
                 <group>
-                    <group><field name="order_type" readonly="state not in ('draft','rejected')"/><field name="original_order_id" invisible="order_type != 'return'" readonly="state not in ('draft','rejected')"/><field name="customer_id" readonly="state not in ('draft','rejected')"/><field name="warehouse_id" readonly="state not in ('draft','rejected')"/><field name="request_date" readonly="1"/></group>
-                    <group><field name="requester_id" readonly="1"/><field name="operator_id" readonly="1"/><field name="payment_method_id"/><field name="payment_reference" invisible="not payment_method_id"/><field name="payment_status" widget="badge" readonly="1"/><field name="completed_date" readonly="1"/></group>
+                    <group><field name="requester_id" readonly="1"/><field name="branch_id" readonly="1"/><field name="warehouse_id" readonly="1"/></group>
+                    <group><field name="request_date" readonly="1"/><field name="operator_id" readonly="1"/><field name="completed_date" readonly="1"/><field name="settlement_type" readonly="1"/></group>
                 </group>
                 <notebook>
                     <page string="Products">
                         <field name="line_ids" readonly="state not in ('draft','rejected') and not is_admin">
-                            <list editable="bottom"><field name="product_id"/><field name="sku" readonly="1"/><field name="category_id" readonly="1"/><field name="available_qty" readonly="1"/><field name="quantity"/><field name="unit_price"/><field name="discount_percent"/><field name="tax_percent"/><field name="price_subtotal" readonly="1"/><field name="price_tax" readonly="1"/><field name="price_total" readonly="1"/><field name="unit_cost" groups="ellaithy_pos.group_ellaithy_pos_admin"/><field name="margin" groups="ellaithy_pos.group_ellaithy_pos_admin" readonly="1"/></list>
+                            <list editable="bottom"><field name="product_id"/><field name="sku" readonly="1"/><field name="category_id" readonly="1"/><field name="available_qty" readonly="1"/><field name="quantity"/><field name="unit_price" readonly="1"/><field name="price_total" readonly="1"/></list>
                         </field>
-                        <group class="oe_subtotal_footer oe_right"><field name="amount_before_discount"/><field name="amount_discount"/><field name="amount_untaxed"/><field name="amount_tax"/><field name="amount_total"/><field name="total_cost" groups="ellaithy_pos.group_ellaithy_pos_admin"/><field name="margin" groups="ellaithy_pos.group_ellaithy_pos_admin"/><field name="margin_percent" widget="percentage" groups="ellaithy_pos.group_ellaithy_pos_admin"/></group>
+                        <group class="oe_subtotal_footer oe_right"><field name="amount_untaxed"/><field name="amount_tax"/><field name="amount_total"/></group>
                     </page>
-                    <page string="Payments" groups="ellaithy_pos.group_ellaithy_pos_operator"><field name="payment_ids"><list editable="bottom"><field name="name" readonly="1"/><field name="payment_date"/><field name="payment_method_id"/><field name="amount"/><field name="reference"/><field name="state"/><button name="action_post" type="object" string="Post" invisible="state != 'draft'"/><button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancelled'"/></list></field><group><field name="amount_paid"/><field name="balance_due"/></group></page>
-                    <page string="Stock Movements" groups="ellaithy_pos.group_ellaithy_pos_operator"><field name="stock_move_ids" readonly="1"><list><field name="name"/><field name="date"/><field name="product_id"/><field name="quantity"/><field name="direction"/><field name="signed_quantity"/><field name="posted"/></list></field></page>
-                    <page string="Notes"><field name="notes"/><field name="rejection_reason" invisible="state not in ('requested','rejected')"/></page>
+                    <page string="Stock Movements" groups="ellaithy_pos.group_ellaithy_pos_operator"><field name="stock_move_ids" readonly="1"><list><field name="name"/><field name="date"/><field name="product_id"/><field name="quantity"/><field name="direction"/><field name="posted"/></list></field></page>
+                    <page string="Notes"><field name="notes"/><field name="rejection_reason" invisible="state not in ('requested','processing','rejected')"/></page>
                 </notebook>
             </sheet><chatter/>
         </form></field>
     </record>
 
+    <record id="view_pos_complete_wizard_form" model="ir.ui.view"><field name="name">ellaithy.pos.complete.wizard.form</field><field name="model">ellaithy.pos.complete.wizard</field><field name="arch" type="xml"><form string="Complete Order"><group><field name="order_id"/><field name="settlement_type" widget="radio"/></group><footer><button name="action_confirm" type="object" string="Complete Order" class="btn-primary"/><button string="Cancel" special="cancel"/></footer></form></field></record>
+
+    <record id="view_pos_salary_order_list" model="ir.ui.view"><field name="name">ellaithy.pos.salary.order.list</field><field name="model">ellaithy.pos.order</field><field name="arch" type="xml"><list decoration-success="salary_paid" decoration-warning="not salary_paid">
+        <header><button name="action_mark_salary_paid" type="object" string="Mark Selected Paid" class="btn-primary"/><button name="action_export_salary_excel" type="object" string="Export Selected Excel"/></header>
+        <field name="name"/><field name="requester_id"/><field name="branch_id"/><field name="warehouse_id"/><field name="completed_date"/><field name="amount_total" sum="All Salary Orders"/><field name="salary_amount" sum="Outstanding Salary Total"/><field name="salary_paid" widget="boolean_toggle" readonly="1"/><field name="salary_paid_date"/><field name="salary_paid_by"/>
+    </list></field></record>
+
+    <record id="view_pos_salary_order_search" model="ir.ui.view"><field name="name">ellaithy.pos.salary.order.search</field><field name="model">ellaithy.pos.order</field><field name="arch" type="xml"><search><field name="requester_id"/><field name="branch_id"/><field name="warehouse_id"/><filter name="outstanding" string="On Salary" domain="[('salary_paid','=',False)]"/><filter name="paid" string="Paid" domain="[('salary_paid','=',True)]"/><filter name="group_requester" string="Requester" context="{'group_by':'requester_id'}"/><filter name="group_branch" string="Branch" context="{'group_by':'branch_id'}"/></search></field></record>
+
     <record id="action_pos_my_orders" model="ir.actions.act_window"><field name="name">My Orders</field><field name="res_model">ellaithy.pos.order</field><field name="view_mode">kanban,list,form</field><field name="search_view_id" ref="view_pos_order_search"/><field name="context">{'search_default_my_orders': 1}</field></record>
-    <record id="action_pos_requested_orders" model="ir.actions.act_window"><field name="name">Order Queue</field><field name="res_model">ellaithy.pos.order</field><field name="view_mode">kanban,list,form</field><field name="search_view_id" ref="view_pos_order_search"/><field name="domain">[('state','in',('requested','approved','processing'))]</field></record>
+    <record id="action_pos_requested_orders" model="ir.actions.act_window"><field name="name">Order Queue</field><field name="res_model">ellaithy.pos.order</field><field name="view_mode">kanban,list,form</field><field name="search_view_id" ref="view_pos_order_search"/><field name="domain">[('state','in',('requested','processing'))]</field></record>
     <record id="action_pos_all_orders" model="ir.actions.act_window"><field name="name">All Orders</field><field name="res_model">ellaithy.pos.order</field><field name="view_mode">list,kanban,form</field><field name="search_view_id" ref="view_pos_order_search"/></record>
+    <record id="action_pos_salary_orders" model="ir.actions.act_window"><field name="name">From Salary</field><field name="res_model">ellaithy.pos.order</field><field name="view_mode">list,form</field><field name="view_id" ref="view_pos_salary_order_list"/><field name="search_view_id" ref="view_pos_salary_order_search"/><field name="domain">[('state','=','done'),('settlement_type','=','salary')]</field><field name="context">{'search_default_outstanding': 1}</field></record>
 </odoo>
