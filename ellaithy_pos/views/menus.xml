@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_ellaithy_pos_root" name="Ellaithy POS" sequence="25" groups="ellaithy_pos.group_ellaithy_pos_user"/>
+
+    <menuitem id="menu_ellaithy_pos_orders" name="My POS Orders" parent="menu_ellaithy_pos_root" action="action_ellaithy_pos_orders" sequence="10" groups="ellaithy_pos.group_ellaithy_pos_user"/>
+    <menuitem id="menu_ellaithy_pos_all_orders" name="All POS Orders" parent="menu_ellaithy_pos_root" action="action_ellaithy_pos_all_orders" sequence="20" groups="ellaithy_pos.group_ellaithy_pos_manager"/>
+
+    <menuitem id="menu_ellaithy_pos_configuration" name="Configuration" parent="menu_ellaithy_pos_root" sequence="90" groups="ellaithy_pos.group_ellaithy_pos_manager"/>
+    <menuitem id="menu_ellaithy_pos_payment_methods" name="Payment Methods" parent="menu_ellaithy_pos_configuration" action="action_ellaithy_pos_payment_methods" sequence="10" groups="ellaithy_pos.group_ellaithy_pos_manager"/>
+</odoo>

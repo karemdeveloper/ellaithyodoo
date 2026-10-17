@@ -1,0 +1,26 @@
+{
+    "name": "Ellaithy POS",
+    "summary": "Internal POS/order request workflow integrated with Sales, Stock and Accounting",
+    "version": "18.0.1.0.0",
+    "category": "Sales/Point of Sale",
+    "author": "Ellaithy Auto Group",
+    "license": "LGPL-3",
+    "depends": [
+        "base",
+        "mail",
+        "sale_management",
+        "stock",
+        "account",
+    ],
+    "data": [
+        "security/ellaithy_pos_security.xml",
+        "security/ir.model.access.csv",
+        "data/sequence.xml",
+        "data/payment_methods.xml",
+        "views/pos_payment_method_views.xml",
+        "views/pos_order_views.xml",
+        "views/menus.xml",
+    ],
+    "application": True,
+    "installable": True,
+}

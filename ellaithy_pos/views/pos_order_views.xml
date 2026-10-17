@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ellaithy_pos_order_search" model="ir.ui.view">
+        <field name="name">ellaithy.pos.order.search</field>
+        <field name="model">ellaithy.pos.order</field>
+        <field name="arch" type="xml">
+            <search string="POS Orders">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="user_id"/>
+                <field name="salesperson_id"/>
+                <field name="warehouse_id"/>
+                <filter name="my_requests" string="My Requests" domain="['|', ('user_id', '=', uid), ('salesperson_id', '=', uid)]"/>
+                <filter name="requested" string="Waiting Approval" domain="[('state', '=', 'requested')]"/>
+                <filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
+                <filter name="done" string="Done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                <filter name="group_salesperson" string="Salesperson" context="{'group_by': 'salesperson_id'}"/>
+                <filter name="group_warehouse" string="Warehouse" context="{'group_by': 'warehouse_id'}"/>
+                <filter name="group_date" string="Request Date" context="{'group_by': 'request_date:month'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ellaithy_pos_order_list" model="ir.ui.view">
+        <field name="name">ellaithy.pos.order.list</field>
+        <field name="model">ellaithy.pos.order</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'done'" decoration-warning="state == 'requested'" decoration-danger="state == 'rejected'">
+                <field name="name"/>
+                <field name="request_date"/>
+                <field name="partner_id"/>
+                <field name="salesperson_id"/>
+                <field name="warehouse_id" optional="show"/>
+                <field name="payment_method_id" optional="show"/>
+                <field name="amount_untaxed" sum="Untaxed"/>
+                <field name="amount_tax" sum="Tax"/>
+                <field name="amount_total" sum="Total"/>
+                <field name="margin" optional="hide" groups="ellaithy_pos.group_ellaithy_pos_manager"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ellaithy_pos_order_kanban" model="ir.ui.view">
+        <field name="name">ellaithy.pos.order.kanban</field>
+        <field name="model">ellaithy.pos.order</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name"/><field name="partner_id"/><field name="amount_total"/><field name="currency_id"/><field name="salesperson_id"/><field name="request_date"/><field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="fw-bold fs-5"><field name="name"/></div>
+                        <div><field name="partner_id"/></div>
+                        <div class="mt-2"><strong>Total: </strong><field name="amount_total" widget="monetary" options="{'currency_field': 'currency_id'}"/></div>
+                        <div><strong>Salesperson: </strong><field name="salesperson_id"/></div>
+                        <div><field name="request_date"/></div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_ellaithy_pos_order_form" model="ir.ui.view">
+        <field name="name">ellaithy.pos.order.form</field>
+        <field name="model">ellaithy.pos.order</field>
+        <field name="arch" type="xml">
+            <form string="Ellaithy POS Order">
+                <header>
+                    <button name="action_submit" type="object" string="Submit Request" class="btn-primary" invisible="state not in ('draft', 'rejected')"/>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary" groups="ellaithy_pos.group_ellaithy_pos_manager" invisible="state != 'requested'"/>
+                    <button name="action_reject" type="object" string="Reject" class="btn-secondary" groups="ellaithy_pos.group_ellaithy_pos_manager" invisible="state != 'requested'"/>
+                    <button name="action_confirm_erp" type="object" string="Confirm in ERP" class="btn-primary" groups="ellaithy_pos.group_ellaithy_pos_manager" invisible="state != 'approved'"/>
+                    <button name="action_create_invoice" type="object" string="Create Invoice" class="btn-primary" groups="ellaithy_pos.group_ellaithy_pos_manager" invisible="state != 'confirmed'"/>
+                    <button name="action_mark_done" type="object" string="Mark Done" groups="ellaithy_pos.group_ellaithy_pos_manager" invisible="state not in ('confirmed', 'invoiced')"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state not in ('rejected', 'cancel')"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('done', 'cancel')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,requested,approved,confirmed,invoiced,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_sale_order" type="object" class="oe_stat_button" icon="fa-shopping-cart" invisible="not sale_order_id">
+                            <div class="o_stat_info"><span class="o_stat_text">Sales Order</span></div>
+                        </button>
+                        <button name="action_open_invoices" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="invoice_count == 0">
+                            <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                        </button>
+                        <button name="action_open_pickings" type="object" class="oe_stat_button" icon="fa-truck" invisible="picking_count == 0">
+                            <field name="picking_count" widget="statinfo" string="Deliveries"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id" readonly="state not in ('draft', 'rejected')"/>
+                            <field name="customer_phone"/>
+                            <field name="salesperson_id" readonly="state not in ('draft', 'rejected')"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="request_date" readonly="state not in ('draft', 'rejected')"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state not in ('draft', 'rejected')"/>
+                            <field name="warehouse_id" readonly="state not in ('draft', 'rejected')"/>
+                            <field name="payment_method_id" readonly="state not in ('draft', 'rejected')"/>
+                            <field name="payment_reference" invisible="not payment_method_id" readonly="state not in ('draft', 'rejected')"/>
+                            <field name="sale_order_id" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Products">
+                            <field name="line_ids" readonly="state not in ('draft', 'rejected') and not user_has_groups('ellaithy_pos.group_ellaithy_pos_manager')">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="name" optional="hide"/>
+                                    <field name="available_qty" string="Available" readonly="1"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="discount"/>
+                                    <field name="tax_ids" widget="many2many_tags"/>
+                                    <field name="price_subtotal" readonly="1"/>
+                                    <field name="price_tax" readonly="1" optional="hide"/>
+                                    <field name="price_total" readonly="1"/>
+                                    <field name="cost_total" readonly="1" groups="ellaithy_pos.group_ellaithy_pos_manager" optional="hide"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="amount_untaxed" widget="monetary"/>
+                                <field name="amount_tax" widget="monetary"/>
+                                <field name="amount_total" widget="monetary" class="oe_subtotal_footer_separator"/>
+                                <field name="total_cost" widget="monetary" groups="ellaithy_pos.group_ellaithy_pos_manager"/>
+                                <field name="margin" widget="monetary" groups="ellaithy_pos.group_ellaithy_pos_manager"/>
+                                <field name="margin_percent" widget="percentage" groups="ellaithy_pos.group_ellaithy_pos_manager"/>
+                            </group>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Order notes, delivery instructions, customer notes..."/>
+                            <field name="rejection_reason" placeholder="Required before rejection" invisible="state not in ('requested', 'rejected')"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ellaithy_pos_orders" model="ir.actions.act_window">
+        <field name="name">POS Orders</field>
+        <field name="res_model">ellaithy.pos.order</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_ellaithy_pos_order_search"/>
+        <field name="context">{'search_default_my_requests': 1}</field>
+    </record>
+
+    <record id="action_ellaithy_pos_all_orders" model="ir.actions.act_window">
+        <field name="name">All POS Orders</field>
+        <field name="res_model">ellaithy.pos.order</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_ellaithy_pos_order_search"/>
+    </record>
+</odoo>

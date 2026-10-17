@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ellaithy_pos_order_user,ellaithy.pos.order user,model_ellaithy_pos_order,group_ellaithy_pos_user,1,1,1,0
+access_ellaithy_pos_order_manager,ellaithy.pos.order manager,model_ellaithy_pos_order,group_ellaithy_pos_manager,1,1,1,1
+access_ellaithy_pos_order_line_user,ellaithy.pos.order.line user,model_ellaithy_pos_order_line,group_ellaithy_pos_user,1,1,1,0
+access_ellaithy_pos_order_line_manager,ellaithy.pos.order.line manager,model_ellaithy_pos_order_line,group_ellaithy_pos_manager,1,1,1,1
+access_ellaithy_pos_payment_method_user,ellaithy.pos.payment.method user,model_ellaithy_pos_payment_method,group_ellaithy_pos_user,1,0,0,0
+access_ellaithy_pos_payment_method_manager,ellaithy.pos.payment.method manager,model_ellaithy_pos_payment_method,group_ellaithy_pos_manager,1,1,1,1
