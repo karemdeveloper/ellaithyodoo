@@ -1,7 +1,7 @@
 {
     "name": "Ellaithy WhatsApp",
     "summary": "WhatsApp Business Platform inbox, CRM, complaints and helpdesk integration",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.0.1",
     "category": "Productivity/Discuss",
     "author": "Ellaithy Auto Group",
     "license": "LGPL-3",
