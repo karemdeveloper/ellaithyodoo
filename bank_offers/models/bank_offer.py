@@ -1,4 +1,5 @@
 from math import pow
+import re
 
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
@@ -50,7 +51,7 @@ class BankOfferBank(models.Model):
 class BankOfferJobType(models.Model):
     _name = "bank.offer.job.type"
     _description = "Bank Offer Job Type"
-    _order = "sequence, name"
+    _order = "sequence, id"
 
     name = fields.Char(required=True, translate=True)
     sequence = fields.Integer(default=10)
@@ -130,6 +131,80 @@ class BankOfferProgram(models.Model):
     verified_by_id = fields.Many2one("res.users", string="Verified By")
 
     rate_line_ids = fields.One2many("bank.offer.rate", "program_id", string="Rates")
+
+    def _parsed_import_values(self):
+        """Parse the compact imported program name used by the supplied Excel sheet.
+
+        Examples include:
+        `... - موظف | 14% | إجباري` and
+        `... - صاحب عمل | 12.4% | بدون تأمين`.
+        """
+        self.ensure_one()
+        text = (self.name or "").strip()
+        parts = [part.strip() for part in text.split("|")]
+        rate = False
+        if len(parts) >= 2:
+            match = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*%", parts[1])
+            if match:
+                rate = float(match.group(1))
+
+        insurance_required = False
+        if len(parts) >= 3:
+            insurance_text = parts[2]
+            # If the source explicitly permits no insurance, do not force it.
+            if "بدون تأمين" in insurance_text or "اختياري" in insurance_text:
+                insurance_required = False
+            elif "إجباري" in insurance_text:
+                insurance_required = True
+
+        prefix = parts[0] if parts else text
+        job_xmlid = False
+        if "فري لانسر" in prefix:
+            job_xmlid = "bank_offers.job_freelancer"
+        elif "صاحب عمل" in prefix:
+            job_xmlid = "bank_offers.job_business_owner"
+        elif "موظف" in prefix:
+            job_xmlid = "bank_offers.job_employee"
+        elif "معاش" in prefix:
+            job_xmlid = "bank_offers.job_pension"
+
+        return {
+            "annual_interest_rate": rate,
+            "insurance_required": insurance_required,
+            "job_xmlid": job_xmlid,
+        }
+
+    def _ensure_imported_rate(self):
+        """Create a usable rate row for imported programs that only carry the rate in Name."""
+        self.ensure_one()
+        if self.rate_line_ids:
+            return self.rate_line_ids
+        parsed = self._parsed_import_values()
+        if parsed["annual_interest_rate"] is False:
+            return self.env["bank.offer.rate"]
+        rate = self.env["bank.offer.rate"].create({
+            "program_id": self.id,
+            "min_downpayment_pct": self.min_downpayment_pct,
+            "max_downpayment_pct": self.max_downpayment_pct,
+            "min_term_months": self.min_term_months,
+            "max_term_months": self.max_term_months,
+            "annual_interest_rate": parsed["annual_interest_rate"],
+            "interest_method": "flat",
+            "insurance_required": parsed["insurance_required"],
+            "notes": _("Auto-created from imported program name"),
+        })
+        if not self.accepted_job_type_ids and parsed["job_xmlid"]:
+            job = self.env.ref(parsed["job_xmlid"], raise_if_not_found=False)
+            if job:
+                self.accepted_job_type_ids = [(6, 0, [job.id])]
+        return rate
+
+    @api.model
+    def _backfill_imported_rates(self):
+        programs = self.search([("active", "=", True), ("bank_id.active", "=", True)])
+        for program in programs:
+            program._ensure_imported_rate()
+        return True
 
     @api.constrains(
         "min_downpayment_pct", "max_downpayment_pct", "min_term_months", "max_term_months",
@@ -308,6 +383,14 @@ class BankOfferAssessment(models.Model):
             return _("Vehicle model year is older than the program allows")
         if program.accepted_job_type_ids and self.job_type_id not in program.accepted_job_type_ids:
             return _("Customer job type is not accepted by this program")
+        # Imported sheets encode the customer job in the program name.  If no
+        # explicit Many2many was imported, honor that source information too.
+        if not program.accepted_job_type_ids:
+            parsed = program._parsed_import_values()
+            if parsed["job_xmlid"]:
+                inferred_job = self.env.ref(parsed["job_xmlid"], raise_if_not_found=False)
+                if inferred_job and self.job_type_id != inferred_job:
+                    return _("Customer job type is not accepted by this program")
         return False
 
     def action_calculate(self):
@@ -319,6 +402,11 @@ class BankOfferAssessment(models.Model):
             candidates = []
             programs = Program.search([("active", "=", True), ("bank_id.active", "=", True)])
             for program in programs:
+                # Imported financing sheets may contain the rate inside the
+                # program name rather than as a separate One2many rate row.
+                # Build that missing rate automatically so every valid bank can
+                # participate in the comparison.
+                program._ensure_imported_rate()
                 reason = rec._program_rejection_reason(program)
                 if reason:
                     continue
@@ -354,14 +442,18 @@ class BankOfferAssessment(models.Model):
                     "annual_insurance": annual_insurance,
                 })
 
+            # Best financial offer first. Approval speed is a tie-breaker,
+            # not the primary ranking criterion.
             candidates.sort(key=lambda c: (
-                c["program"].approval_days,
                 c["monthly"],
                 c["rate"].annual_interest_rate,
+                c["program"].approval_days,
                 c["program"].bank_id.sequence,
             ))
             rec.eligible_count = len(candidates)
-            for rank, c in enumerate(candidates[:3], start=1):
+            # Show every eligible offer. The user can see the full market
+            # comparison instead of only the first three records.
+            for rank, c in enumerate(candidates, start=1):
                 Result.create({
                     "assessment_id": rec.id,
                     "rank": rank,

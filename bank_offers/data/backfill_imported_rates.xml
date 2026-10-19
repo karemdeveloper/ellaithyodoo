@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Runs on install/upgrade and repairs imported financing programs whose
+         interest rate is encoded in the program name. -->
+    <function model="bank.offer.program" name="_backfill_imported_rates"/>
+</odoo>

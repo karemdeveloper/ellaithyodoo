@@ -1,6 +1,6 @@
 {
     "name": "Bank Offers",
-    "version": "18.0.1.1.1",
+    "version": "18.0.1.2.0",
     "summary": "Python custom addon for bank financing programs, pre-assessment, installment calculation and bank recommendations",
     "description": """
 Bank Offers for Odoo 18
@@ -21,6 +21,7 @@ Bank Offers for Odoo 18
         "security/rules.xml",
         "data/sequence.xml",
         "data/initial_data.xml",
+        "data/backfill_imported_rates.xml",
         "views/bank_views.xml",
         "views/program_views.xml",
         "views/job_type_views.xml",
