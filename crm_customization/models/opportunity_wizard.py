@@ -27,7 +27,7 @@ class OpportunityWizard(models.TransientModel):
         ('trade_in', 'Trade In'),
         ('used', 'Used'),
         ('service', 'Service'),
-    ], string='Opportunity Type', tracking=True,default='new')
+    ], string='Opportunity Type', default='new')
     sub_brand_id = fields.Many2one('res.sub.brand', string="Sub Brand", required=False)
     sub_brand_id2 = fields.Many2many('res.sub.brand', string="Sub Brand(s)", required=False)
     sub_brand_used_id = fields.Many2many(
@@ -51,16 +51,30 @@ class OpportunityWizard(models.TransientModel):
 
 
     @api.model
-    def default_get(self, fields):
-        """Pre-fill area and branch from the selected customer"""
-        res = super().default_get(fields)
-        partner = self.env['res.partner'].browse(self.env.context.get('active_id'))
-        if partner:
-            res['partner_id'] = partner.id
-            res['name'] = partner.name
-            res['area_id'] = partner.area_id.id
-            res['branch_id'] = partner.branch_id.id
-            res['source_id'] = partner.crm_source_id.id
+    def default_get(self, fields_list):
+        """Pre-fill from context first; query the partner only as fallback.
+
+        res.partner.action_open_create_opportunity_wizard passes the normal
+        defaults directly, so this usually performs no extra partner reads.
+        """
+        res = super().default_get(fields_list)
+
+        # New optimized path: defaults were supplied by the customer action.
+        if self.env.context.get('default_partner_id'):
+            return res
+
+        # Compatibility path for callers that open this wizard using active_id.
+        partner_id = self.env.context.get('active_id')
+        if partner_id:
+            partner = self.env['res.partner'].browse(partner_id).exists()
+            if partner:
+                res.update({
+                    'partner_id': partner.id,
+                    'name': partner.name or '',
+                    'area_id': partner.area_id.id or False,
+                    'branch_id': partner.branch_id.id or False,
+                    'source_id': partner.crm_source_id.id or False,
+                })
         return res
 
     @api.onchange('brand_id2')
@@ -88,202 +102,25 @@ class OpportunityWizard(models.TransientModel):
     #################################################################################
 
     def _get_next_salesperson(self):
-        """
-        Determine the next salesperson using:
-        ✔ Round Robin per Branch + Shift
-        ✔ Handles overnight shifts
-        ✔ Fallback if no shift
-        ✔ Logging for debugging
-        ✔ Safety check for missing salesperson
-        ✔ Accurate fair distribution
+        """Return the next salesperson using the shared distributor.
+
+        The previous popup contained a second full copy of the round-robin
+        algorithm. Reusing distribute.sequence avoids duplicate CRM team/member
+        searches and keeps one source of truth for assignment.
         """
         self.ensure_one()
-        branch = self.branch_id
-        if not branch:
-            _logger.info("No branch selected in wizard. Exiting _get_next_salesperson.")
+        if not self.branch_id:
             return False
-
-        # 1️⃣ Get branch sales teams
-        sales_teams = self.env['crm.team'].search([('branch_name', '=', branch.id)])
-        if not sales_teams:
-            _logger.info("No sales teams found for branch %s.", branch.branch_name)
-            return False
-
-        # 2️⃣ Active team members
-        active_members = self.env['crm.team.member'].search([
-            ('crm_team_id', 'in', sales_teams.ids),
-            ('state', '=', 'active')
-        ])
-
-        if not active_members:
-            return False
-
-        # 3️⃣ Egypt local time
-        utc_now = fields.Datetime.now()
-        egypt_tz = pytz.timezone('Africa/Cairo')
-        local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(egypt_tz)
-        current_hour = local_now.hour + local_now.minute / 60.0
-
-        _logger.info("Current Egypt hour: %.4f", current_hour)
-
-        # =========================================================
-        # ⭐ GET ALL ACTIVE SEQUENCES FIRST
-        # =========================================================
-        all_sequences = self.env['distribute.sequence'].search([
-            ('branch', '=', branch.id),
-            ('state', '=', 'active'),
-            ('sales_person', 'in', active_members.mapped('user_id').ids),
-        ], order='sequence asc, id asc')
-
-        if not all_sequences:
-            _logger.info("No active sequences found.")
-            return False
-
-        # =========================================================
-        # ⭐ SHIFT FILTER (handles overnight shift)
-        # =========================================================
-        def _is_in_shift(shift, hour):
-            if not shift:
-                return False
-            if shift.from_date <= shift.to_date:
-                # normal shift
-                return shift.from_date <= hour <= shift.to_date
-            else:
-                # overnight shift
-                return hour >= shift.from_date or hour <= shift.to_date
-
-        sequences = all_sequences.filtered(lambda s: _is_in_shift(s.shift, current_hour))
-
-        fallback_mode = False
-        current_shift = False
-
-        if not sequences:
-            _logger.info("❌ No sequences for current shift → Fallback to all active sequences")
-            sequences = all_sequences
-            fallback_mode = True
-        else:
-            current_shift = sequences[0].shift
-
-        # =========================================================
-        # 🔍 DEBUG LOGGING
-        # =========================================================
-        _logger.info("===================================================")
-
-        if fallback_mode:
-            _logger.info("📌 FALLBACK MODE (No active shift)")
-        else:
-            _logger.info("📌 CURRENT SHIFT: %s (ID=%s)",
-                         current_shift.shift_name, current_shift.id)
-
-        _logger.info("Branch: %s (ID=%s)", branch.branch_name, branch.id)
-        _logger.info("🕒 Current Hour: %.2f", current_hour)
-
-        for seq in sequences:
-            _logger.info(
-                "   ➜ SeqID=%s | Order=%s | Shift=%s | User=%s",
-                seq.id,
-                seq.sequence,
-                seq.shift.shift_name if seq.shift else "NO SHIFT",
-                seq.sales_person.name if seq.sales_person else "NO USER",
-            )
-
-        _logger.info("===================================================")
-
-        # =========================================================
-        # ⭐ PARAM KEY
-        # =========================================================
-        if fallback_mode:
-            param_key = f'last_sequence_id_{branch.id}_fallback'
-        else:
-            param_key = f'last_sequence_id_{branch.id}_{current_shift.id}'
-
-        config = self.env['ir.config_parameter'].sudo()
-        last_seq_id_str = config.get_param(param_key)
-
-        try:
-            last_seq_id = int(last_seq_id_str) if last_seq_id_str else None
-        except (TypeError, ValueError):
-            last_seq_id = None
-
-        valid_ids = sequences.ids
-
-        # =========================================================
-        # 5️⃣ Round Robin
-        # =========================================================
-        if last_seq_id in valid_ids:
-            current_index = valid_ids.index(last_seq_id)
-            next_index = (current_index + 1) % len(valid_ids)
-            next_seq = sequences[next_index]
-        else:
-            next_seq = sequences[0]
-
-        # =========================================================
-        # ⭐ ARCHIVED SALESPERSON → next one in turn takes it
-        # =========================================================
-        if not next_seq.sales_person.active:
-            start = valid_ids.index(next_seq.id)
-            for offset in range(1, len(valid_ids)):
-                candidate = sequences[(start + offset) % len(valid_ids)]
-                if candidate.sales_person.active:
-                    _logger.info("Salesperson %s is archived → turn goes to %s",
-                                 next_seq.sales_person.name, candidate.sales_person.name)
-                    next_seq = candidate
-                    break
-            else:
-                _logger.info("All salespersons in the sequences are archived.")
-                return False
-
-        # =========================================================
-        # ⭐ SAFETY CHECK
-        # =========================================================
-        if not next_seq.sales_person:
-            _logger.warning("Sequence %s has no salesperson → searching alternative", next_seq.id)
-            for seq in sequences:
-                if seq.sales_person:
-                    next_seq = seq
-                    break
-            else:
-                return False
-
-        # Save pointer
-        config.set_param(param_key, str(next_seq.id))
-
-        _logger.info(
-            "✅ Selected salesperson: %s (seq id=%s) → Saved param key %s",
-            next_seq.sales_person.name,
-            next_seq.id,
-            param_key
+        return self.env['distribute.sequence']._get_next_salesperson_for_branch(
+            self.branch_id.id
         )
 
-        return next_seq.sales_person
     def action_distribute(self):
         """Button action to create a CRM Opportunity and assign next salesperson"""
         self.ensure_one()
-        # ---------------------------------------------------------
-        # Access Control: Check if user has full create permission
-        # ---------------------------------------------------------
-        has_full_access = self.env.user.has_group(
-            'crm_customization.group_access_create_opportunity'
-        )
-
-        if not has_full_access:
-            # Check ALL existing opportunities for this partner
-            existing_opps = self.env['crm.lead'].search([
-                ('partner_id', '=', self.partner_id.id),
-                ('type', '=', 'opportunity')
-            ])
-
-            if existing_opps:
-                # Filter open opportunities (not won and not lost)
-                open_opps = existing_opps.filtered(
-                    lambda o: not getattr(o, 'is_won', False)
-                              and not getattr(o, 'is_lost', False)
-                )
-
-                if open_opps:
-                    raise ValidationError(
-                        "Cannot add opportunity. Customer already has an open opportunity."
-                    )
+        # The one-open-opportunity rule is enforced centrally by
+        # crm.lead.create(). Do not repeat the CRM search here: the old popup
+        # did the same check twice, which made Save/Create noticeably slower.
 
         # Reuse the partner's salesperson only while that user is still active;
         # an archived salesperson falls through to the distribution logic.
