@@ -4,6 +4,7 @@ from datetime import datetime
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 import pytz
 import math
+import time
 
 from odoo.exceptions import AccessError
 
@@ -131,17 +132,24 @@ class CrmLead(models.Model):
                 open_opps_count = self.search_count([
                     ('partner_id', '=', partner_id),
                     ('type', '=', 'opportunity'),
-                    # probability < 100 means not won, active=True means not lost (since lost stage sets active=False)
                     ('probability', '<', 100),
                     ('active', '=', True)
-                ])
+                ], limit=1)
                 # if there are any open opportunities for this customer, prevent creation of a new one
                 if open_opps_count > 0:
                     raise ValidationError(
                         _("Cannot add opportunity. Customer already has an open opportunity.")
                     )
 
-        return super().create(vals)
+        create_started = time.monotonic()
+        record = super().create(vals)
+        _logger = __import__('logging').getLogger(__name__)
+        _logger.info(
+            "Create Opportunity timing: crm.lead super().create %.3fs (lead=%s)",
+            time.monotonic() - create_started,
+            record.id,
+        )
+        return record
 #######################################################################################
     @api.depends('opportunity_type')
     def _compute_opportunity_type_display(self):

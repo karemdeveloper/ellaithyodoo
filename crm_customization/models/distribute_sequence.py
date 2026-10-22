@@ -140,8 +140,15 @@ class DistributeSequence(models.Model):
         else:
             param_key = f'last_sequence_id_{branch.id}_{current_shift.id}'
 
-        config = self.env['ir.config_parameter'].sudo()
-        last_seq_id_str = config.get_param(param_key)
+        # Read the round-robin pointer directly.  Using get_param/set_param
+        # here invalidates Odoo configuration caches and makes an interactive
+        # opportunity save unnecessarily expensive.
+        self.env.cr.execute(
+            "SELECT value FROM ir_config_parameter WHERE key = %s LIMIT 1",
+            [param_key],
+        )
+        pointer_row = self.env.cr.fetchone()
+        last_seq_id_str = pointer_row[0] if pointer_row else False
 
         try:
             last_seq_id = int(last_seq_id_str) if last_seq_id_str else None
@@ -188,8 +195,18 @@ class DistributeSequence(models.Model):
             salespersons.append(next_seq.sales_person)
             last_seq_id = next_seq.id
 
-        # 10. Save pointer (once for the whole batch)
-        config.set_param(param_key, str(last_seq_id))
+        # 10. Save pointer without clearing the registry/config cache.
+        self.env.cr.execute(
+            """
+            INSERT INTO ir_config_parameter (key, value, create_uid, write_uid, create_date, write_date)
+            VALUES (%s, %s, %s, %s, NOW(), NOW())
+            ON CONFLICT (key)
+            DO UPDATE SET value = EXCLUDED.value,
+                          write_uid = EXCLUDED.write_uid,
+                          write_date = NOW()
+            """,
+            [param_key, str(last_seq_id), self.env.uid, self.env.uid],
+        )
 
         _logger.info(
             "✅ Selected %s salesperson(s), last: %s (seq id=%s) → Saved param key %s",
