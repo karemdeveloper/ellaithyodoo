@@ -10,6 +10,44 @@ from odoo.exceptions import AccessError
 
 class CrmLead(models.Model):
     _inherit = 'crm.lead'
+
+    # Keep Odoo's native UTM source separate from Ellaithy's custom
+    # res.source field (source_name).  The database relation is explicitly
+    # SET NULL so deleting an Odoo UTM source can never block on crm.lead.
+    source_id = fields.Many2one(
+        'utm.source',
+        string='Odoo Marketing Source',
+        ondelete='set null',
+        index=True,
+    )
+
+    def init(self):
+        """Repair legacy crm_lead_source_id_fkey delete behavior.
+
+        Older databases may still have this FK as NO ACTION/RESTRICT even
+        though the desired CRM behavior is to clear source_id when a UTM
+        source is removed.  Run before module data cleanup during upgrade.
+        """
+        self.env.cr.execute("""
+            SELECT c.confdeltype
+              FROM pg_constraint c
+             WHERE c.conname = 'crm_lead_source_id_fkey'
+               AND c.conrelid = 'crm_lead'::regclass
+        """)
+        row = self.env.cr.fetchone()
+        if row and row[0] != 'n':
+            self.env.cr.execute("""
+                ALTER TABLE crm_lead
+                DROP CONSTRAINT crm_lead_source_id_fkey
+            """)
+            self.env.cr.execute("""
+                ALTER TABLE crm_lead
+                ADD CONSTRAINT crm_lead_source_id_fkey
+                FOREIGN KEY (source_id)
+                REFERENCES utm_source(id)
+                ON DELETE SET NULL
+            """)
+
     
     branch_name = fields.Many2one('res.branch', string="Branch")
     area_name = fields.Many2one('res.area', string="Area")
