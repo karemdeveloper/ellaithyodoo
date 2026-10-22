@@ -1,4 +1,4 @@
-from odoo import models, fields, api, _
+from odoo import models, fields, api
 from datetime import datetime
 from datetime import timedelta
 
@@ -166,8 +166,8 @@ class OpportunityWizard(models.TransientModel):
           4. return the new form
 
         No customer write and no round-robin pointer write are performed
-        by this button. Original lead naming and normal creator chatter logging
-        are preserved.
+        by this button. The original CRM lead sequence naming is preserved,
+        while creator logging is written as one lightweight audit message.
         """
         self.ensure_one()
         started = time.monotonic()
@@ -208,20 +208,48 @@ class OpportunityWizard(models.TransientModel):
         }
 
         create_started = time.monotonic()
-        # Keep only the source-safety context.
-        #
-        # Do NOT disable mail/thread tracking here: normal Odoo create logging
-        # must remain enabled so the creator/audit entry is stored in chatter.
         lead = self.env['crm.lead'].with_context(
             default_source_id=False,
             ellaithy_popup_source_id=False,
+            tracking_disable=True,
+            mail_notrack=True,
+            mail_create_nosubscribe=True,
         ).create(create_vals)
 
+        create_elapsed = time.monotonic() - create_started
         _logger.info(
             "Create Opportunity timing: crm.lead.create %.3fs (lead=%s)",
-            time.monotonic() - create_started,
+            create_elapsed,
             lead.id,
         )
+
+        # Lightweight creator/audit chatter entry.
+        #
+        # Full mail.thread tracking is intentionally kept disabled above for
+        # performance.  This single mail.message preserves the visible creator
+        # log without running the complete tracking/subscription pipeline.
+        audit_started = time.monotonic()
+        try:
+            subtype = self.env.ref('mail.mt_note', raise_if_not_found=False)
+            self.env['mail.message'].sudo().create({
+                'model': 'crm.lead',
+                'res_id': lead.id,
+                'author_id': self.env.user.partner_id.id,
+                'message_type': 'notification',
+                'subtype_id': subtype.id if subtype else False,
+                'body': "Opportunity created by %s" % self.env.user.display_name,
+            })
+            _logger.info(
+                "Create Opportunity timing: creator audit log %.3fs",
+                time.monotonic() - audit_started,
+            )
+        except Exception as exc:
+            # Never fail the opportunity because of the audit display message.
+            _logger.warning(
+                "Create Opportunity: creator audit log failed after %.3fs: %s",
+                time.monotonic() - audit_started,
+                exc,
+            )
         _logger.info(
             "Create Opportunity timing: TOTAL %.3fs (partner=%s lead=%s)",
             time.monotonic() - started,

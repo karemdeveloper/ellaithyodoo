@@ -113,7 +113,14 @@ class CrmLead(models.Model):
                     print("Branch ID from user sale team:", branch_id)  # Debug print
 
             if branch_id:
+                naming_started = time.monotonic()
                 vals['name'] = self._generate_lead_name(branch_id)
+                _logger = __import__('logging').getLogger(__name__)
+                _logger.info(
+                    "Create Opportunity timing: original name generation %.3fs (name=%s)",
+                    time.monotonic() - naming_started,
+                    vals['name'],
+                )
                 print("Generated lead name:", vals['name'])  # Debug print
             else:
                 vals['name'] = self.env['ir.sequence'].next_by_code('crm.lead') or 'New'
