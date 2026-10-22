@@ -40,7 +40,7 @@ class OpportunityWizard(models.TransientModel):
     )
     area_id = fields.Many2one('res.area', string="Area",required=True)
     branch_id = fields.Many2one('res.branch', string="Branch",required=True)
-    source_id = fields.Many2one('res.source', string="Source", required=True)
+    source_id = fields.Many2one('res.source', string="Customer Source", required=True)
     sla_duration = fields.Float(string="SLA Duration")
     partner_id = fields.Many2one('res.partner', string="Customer")
     marketing_offer = fields.Many2one('marketing.offers', string='Marketing Offer')

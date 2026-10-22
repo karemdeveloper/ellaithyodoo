@@ -233,7 +233,7 @@
         <field name="arch" type="xml">
             <!-- Add Source, Brand, and Sub Brand fields to quick create -->
             <xpath expr="//group/field[@name='phone']" position="after">
-                <field name="source_name" string="Source" placeholder="Source"
+                <field name="source_name" string="Customer Source" placeholder="Source"
                        options="{'no_create': True, 'no_edit': True}" required="1"/>
                 <field name="branch_name" string="Branch" placeholder="Branch"
                        options="{'no_create': True, 'no_edit': True}" required="1"/>

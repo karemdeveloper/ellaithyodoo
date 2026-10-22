@@ -16,7 +16,7 @@ class CrmLead(models.Model):
     # brand_name = fields.Many2one('res.brand', string="Brand", required=True)
     brand_name2 = fields.Many2many('res.brand', string="Brand(s)")
 
-    source_name = fields.Many2one('res.source', string="Source")
+    source_name = fields.Many2one('res.source', string="Customer Source", index=True)
     sales_team = fields.Many2one('crm.team', string="Sales team")
     # sub_brand_name = fields.Many2one('res.sub.brand', string="Sub Brand", required=True)
     sub_brand_name2 = fields.Many2many('res.sub.brand', string="Sub Brand(s)")

@@ -20,7 +20,7 @@ class ResPartner(models.Model):
     company_custom_id = fields.Many2one('res.company.custom', string="Company")
     is_opportunity = fields.Boolean(string='Is Opportunity', default=False)
     survey_ids = fields.One2many('res.survey', 'partner_id', string="Surveys")
-    crm_source_id = fields.Many2one('res.source', string="Source", required=True)
+    crm_source_id = fields.Many2one('res.source', string="Customer Source", required=True, index=True)
 
     # Indexed to speed up duplicate-phone lookups (_compute_customer_already_exist),
     # which does a full search('phone', '=', ...)
