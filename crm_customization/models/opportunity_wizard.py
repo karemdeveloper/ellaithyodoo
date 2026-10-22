@@ -99,32 +99,84 @@ class OpportunityWizard(models.TransientModel):
     #################################################################################
 
     def _get_next_salesperson(self):
-        """Use the shared, optimized round-robin distributor."""
+        """Choose a salesperson without updating any shared pointer.
+
+        This is intentionally stateless for the interactive Create Opportunity
+        request.  It respects branch, active CRM team membership and current
+        shift, but performs reads only.  A deterministic partner-based index
+        spreads new customers across the available sequences without any
+        shared-row UPDATE/INSERT that could block another user.
+        """
         self.ensure_one()
         if not self.branch_id:
             return False
-        return self.env['distribute.sequence']._get_next_salesperson_for_branch(
-            self.branch_id.id
-        )
+
+        sales_teams = self.env['crm.team'].search([
+            ('branch_name', '=', self.branch_id.id),
+        ])
+        if not sales_teams:
+            return False
+
+        active_members = self.env['crm.team.member'].search([
+            ('crm_team_id', 'in', sales_teams.ids),
+            ('state', '=', 'active'),
+        ])
+        active_user_ids = active_members.mapped('user_id').filtered(
+            lambda user: user.active
+        ).ids
+        if not active_user_ids:
+            return False
+
+        sequences = self.env['distribute.sequence'].search([
+            ('branch', '=', self.branch_id.id),
+            ('state', '=', 'active'),
+            ('sales_person', 'in', active_user_ids),
+        ], order='sequence asc, id asc')
+        if not sequences:
+            return False
+
+        utc_now = fields.Datetime.now()
+        cairo_tz = pytz.timezone('Africa/Cairo')
+        local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(cairo_tz)
+        current_hour = local_now.hour + local_now.minute / 60.0
+
+        def in_shift(seq):
+            shift = seq.shift
+            if not shift:
+                return False
+            if shift.from_date <= shift.to_date:
+                return shift.from_date <= current_hour <= shift.to_date
+            return current_hour >= shift.from_date or current_hour <= shift.to_date
+
+        current_sequences = sequences.filtered(in_shift)
+        candidates = current_sequences or sequences
+
+        # Stateless and deterministic: no pointer row and therefore no lock.
+        key = self.partner_id.id or self.id or 0
+        selected = candidates[key % len(candidates)]
+        return selected.sales_person if selected.sales_person.active else False
 
     def action_distribute(self):
-        """Create and assign an opportunity without expensive duplicate work."""
+        """Minimal, lock-resistant Create Opportunity request.
+
+        Critical path only:
+          1. validate customer
+          2. choose salesperson using read-only/stateless logic
+          3. create crm.lead
+          4. return the new form
+
+        No customer write, no round-robin pointer write, and no lead-name
+        sequence call are performed by this button.
+        """
         self.ensure_one()
         started = time.monotonic()
 
         if not self.partner_id:
             raise ValidationError(_("Customer is required."))
 
-        # crm.lead.create() is the single enforcement point for the
-        # one-open-opportunity rule. Do not perform the same CRM query twice.
-
-        salesperson = False
+        # Reuse the customer's active salesperson when available.
         if self.partner_id.user_id and self.partner_id.user_id.active:
             salesperson = self.partner_id.user_id
-            _logger.info(
-                "Create Opportunity: reused salesperson %s for partner %s",
-                salesperson.id, self.partner_id.id,
-            )
         else:
             assign_started = time.monotonic()
             salesperson = self._get_next_salesperson()
@@ -133,7 +185,17 @@ class OpportunityWizard(models.TransientModel):
                 time.monotonic() - assign_started,
             )
 
+        # IMPORTANT: pass the wizard name explicitly.  Without this value,
+        # crm.lead.create() calls _generate_lead_name(branch_id), which belongs
+        # to a separate sequence customization and may contend on shared state.
+        opportunity_name = (
+            (self.name or '').strip()
+            or (self.partner_id.name or '').strip()
+            or _("Opportunity")
+        )
+
         create_vals = {
+            'name': opportunity_name,
             'sla_duration': '00:00:00',
             'marketing_offer': self.marketing_offer.id,
             'call_type': self.call_type.id,
@@ -156,51 +218,23 @@ class OpportunityWizard(models.TransientModel):
 
         create_started = time.monotonic()
         lead = self.env['crm.lead'].with_context(
-            # Protect against the popup context being interpreted as the
-            # native crm.lead.source_id (utm.source).
             default_source_id=False,
             ellaithy_popup_source_id=False,
+            tracking_disable=True,
+            mail_notrack=True,
+            mail_create_nosubscribe=True,
         ).create(create_vals)
+
         _logger.info(
             "Create Opportunity timing: crm.lead.create %.3fs (lead=%s)",
-            time.monotonic() - create_started, lead.id,
+            time.monotonic() - create_started,
+            lead.id,
         )
-
-        # Best-effort customer salesperson synchronization.
-        #
-        # This update is NOT required for the newly-created opportunity itself.
-        # Give it only 250ms to obtain any PostgreSQL lock. If the customer row
-        # is busy, skip the sync and return the opportunity immediately.
-        if salesperson and self.partner_id.user_id.id != salesperson.id:
-            partner_started = time.monotonic()
-            try:
-                with self.env.cr.savepoint():
-                    self.env.cr.execute("SET LOCAL lock_timeout = '250ms'")
-                    self.partner_id.with_context(
-                        tracking_disable=True,
-                        mail_notrack=True,
-                        mail_create_nosubscribe=True,
-                    ).write({'user_id': salesperson.id})
-                self.env.cr.execute("SET LOCAL lock_timeout = '0'")
-                _logger.info(
-                    "Create Opportunity timing: partner salesperson sync %.3fs",
-                    time.monotonic() - partner_started,
-                )
-            except Exception as exc:
-                # A locked/busy partner must never block or fail lead creation.
-                try:
-                    self.env.cr.execute("SET LOCAL lock_timeout = '0'")
-                except Exception:
-                    pass
-                _logger.warning(
-                    "Create Opportunity: skipped partner salesperson sync after %.3fs: %s",
-                    time.monotonic() - partner_started,
-                    exc,
-                )
-
         _logger.info(
             "Create Opportunity timing: TOTAL %.3fs (partner=%s lead=%s)",
-            time.monotonic() - started, self.partner_id.id, lead.id,
+            time.monotonic() - started,
+            self.partner_id.id,
+            lead.id,
         )
 
         return {

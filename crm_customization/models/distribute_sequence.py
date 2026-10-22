@@ -195,37 +195,18 @@ class DistributeSequence(models.Model):
             salespersons.append(next_seq.sales_person)
             last_seq_id = next_seq.id
 
-        # 10. Save pointer with a hard lock timeout.
-        #
-        # Another long transaction must never make an interactive Create
-        # Opportunity request wait for minutes on this shared pointer row.
-        try:
-            with self.env.cr.savepoint():
-                self.env.cr.execute("SET LOCAL lock_timeout = '250ms'")
-                self.env.cr.execute(
-                    """
-                    INSERT INTO ir_config_parameter
-                        (key, value, create_uid, write_uid, create_date, write_date)
-                    VALUES (%s, %s, %s, %s, NOW(), NOW())
-                    ON CONFLICT (key)
-                    DO UPDATE SET value = EXCLUDED.value,
-                                  write_uid = EXCLUDED.write_uid,
-                                  write_date = NOW()
-                    """,
-                    [param_key, str(last_seq_id), self.env.uid, self.env.uid],
-                )
-            self.env.cr.execute("SET LOCAL lock_timeout = '0'")
-        except Exception as exc:
-            try:
-                self.env.cr.execute("SET LOCAL lock_timeout = '0'")
-            except Exception:
-                pass
-            # The selected salesperson is still valid. We only skip advancing
-            # the pointer for this request rather than blocking/failing Create.
-            _logger.warning(
-                "Round-robin pointer update skipped because it was busy: %s",
-                exc,
-            )
+        # 10. Save pointer without clearing the registry/config cache.
+        self.env.cr.execute(
+            """
+            INSERT INTO ir_config_parameter (key, value, create_uid, write_uid, create_date, write_date)
+            VALUES (%s, %s, %s, %s, NOW(), NOW())
+            ON CONFLICT (key)
+            DO UPDATE SET value = EXCLUDED.value,
+                          write_uid = EXCLUDED.write_uid,
+                          write_date = NOW()
+            """,
+            [param_key, str(last_seq_id), self.env.uid, self.env.uid],
+        )
 
         _logger.info(
             "✅ Selected %s salesperson(s), last: %s (seq id=%s) → Saved param key %s",
