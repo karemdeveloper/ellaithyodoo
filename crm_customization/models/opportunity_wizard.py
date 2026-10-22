@@ -1,4 +1,4 @@
-from odoo import models, fields, api, _
+from odoo import models, fields, api
 from datetime import datetime
 from datetime import timedelta
 
@@ -166,18 +166,37 @@ class OpportunityWizard(models.TransientModel):
             time.monotonic() - create_started, lead.id,
         )
 
-        # Partner salesperson synchronization is not required to open the
-        # opportunity. Queue it instead of writing res.partner in the user's
-        # HTTP transaction, so a locked/busy partner can never delay Create.
+        # Best-effort customer salesperson synchronization.
+        #
+        # This update is NOT required for the newly-created opportunity itself.
+        # Give it only 250ms to obtain any PostgreSQL lock. If the customer row
+        # is busy, skip the sync and return the opportunity immediately.
         if salesperson and self.partner_id.user_id.id != salesperson.id:
-            queue_started = time.monotonic()
-            self.env['crm.opportunity.partner.sync'].sudo().enqueue(
-                self.partner_id, salesperson, lead
-            )
-            _logger.info(
-                "Create Opportunity timing: background sync enqueue %.3fs",
-                time.monotonic() - queue_started,
-            )
+            partner_started = time.monotonic()
+            try:
+                with self.env.cr.savepoint():
+                    self.env.cr.execute("SET LOCAL lock_timeout = '250ms'")
+                    self.partner_id.with_context(
+                        tracking_disable=True,
+                        mail_notrack=True,
+                        mail_create_nosubscribe=True,
+                    ).write({'user_id': salesperson.id})
+                self.env.cr.execute("SET LOCAL lock_timeout = '0'")
+                _logger.info(
+                    "Create Opportunity timing: partner salesperson sync %.3fs",
+                    time.monotonic() - partner_started,
+                )
+            except Exception as exc:
+                # A locked/busy partner must never block or fail lead creation.
+                try:
+                    self.env.cr.execute("SET LOCAL lock_timeout = '0'")
+                except Exception:
+                    pass
+                _logger.warning(
+                    "Create Opportunity: skipped partner salesperson sync after %.3fs: %s",
+                    time.monotonic() - partner_started,
+                    exc,
+                )
 
         _logger.info(
             "Create Opportunity timing: TOTAL %.3fs (partner=%s lead=%s)",

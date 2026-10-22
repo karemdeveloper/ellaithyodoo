@@ -1,7 +1,6 @@
 from odoo import models, fields, api
 import pytz
 import logging
-import time
 
 _logger = logging.getLogger(__name__)
 
@@ -135,73 +134,102 @@ class DistributeSequence(models.Model):
             )
         _logger.info("===================================================")
 
-        # 7. Lock-safe round-robin ticket.
-        #
-        # The old implementation updated one shared ir.config_parameter row
-        # inside the user's main transaction. Under concurrency that row can be
-        # locked by another long transaction and make Create Opportunity wait
-        # for minutes.
-        #
-        # v4 uses a tiny *independent* transaction that increments an atomic
-        # counter and commits immediately. A hard 300ms lock timeout prevents
-        # the interactive request from ever waiting on the round-robin pointer.
+        # 7. Param key for round-robin pointer
         if fallback_mode:
-            counter_key = f'crm_rr_v4_{branch.id}_fallback'
+            param_key = f'last_sequence_id_{branch.id}_fallback'
         else:
-            counter_key = f'crm_rr_v4_{branch.id}_{current_shift.id}'
+            param_key = f'last_sequence_id_{branch.id}_{current_shift.id}'
 
-        valid_sequences = sequences.filtered(
-            lambda seq: seq.sales_person and seq.sales_person.active
+        # Read the round-robin pointer directly.  Using get_param/set_param
+        # here invalidates Odoo configuration caches and makes an interactive
+        # opportunity save unnecessarily expensive.
+        self.env.cr.execute(
+            "SELECT value FROM ir_config_parameter WHERE key = %s LIMIT 1",
+            [param_key],
         )
-        if not valid_sequences:
-            _logger.info("No active salesperson available for branch %s.", branch.branch_name)
-            return []
+        pointer_row = self.env.cr.fetchone()
+        last_seq_id_str = pointer_row[0] if pointer_row else False
 
         try:
-            with self.env.registry.cursor() as rr_cr:
-                rr_cr.execute("SET LOCAL lock_timeout = '300ms'")
-                rr_cr.execute(
+            last_seq_id = int(last_seq_id_str) if last_seq_id_str else None
+        except (TypeError, ValueError):
+            last_seq_id = None
+
+        valid_ids = sequences.ids
+
+        salespersons = []
+        for _turn in range(count):
+            # 8. Round Robin
+            if last_seq_id in valid_ids:
+                current_index = valid_ids.index(last_seq_id)
+                next_index = (current_index + 1) % len(valid_ids)
+                next_seq = sequences[next_index]
+            else:
+                next_seq = sequences[0]
+
+            # 8b. Archived salesperson → next one in turn takes it
+            if not next_seq.sales_person.active:
+                start = valid_ids.index(next_seq.id)
+                for offset in range(1, len(valid_ids)):
+                    candidate = sequences[(start + offset) % len(valid_ids)]
+                    if candidate.sales_person.active:
+                        _logger.info("Salesperson %s is archived → turn goes to %s",
+                                     next_seq.sales_person.name, candidate.sales_person.name)
+                        next_seq = candidate
+                        break
+                else:
+                    _logger.info("All salespersons in the sequences are archived.")
+                    return []
+
+            # 9. Safety check
+            if not next_seq.sales_person:
+                _logger.warning("Sequence %s has no salesperson → searching alternative",
+                                next_seq.id)
+                for seq in sequences:
+                    if seq.sales_person:
+                        next_seq = seq
+                        break
+                else:
+                    return []
+
+            salespersons.append(next_seq.sales_person)
+            last_seq_id = next_seq.id
+
+        # 10. Save pointer with a hard lock timeout.
+        #
+        # Another long transaction must never make an interactive Create
+        # Opportunity request wait for minutes on this shared pointer row.
+        try:
+            with self.env.cr.savepoint():
+                self.env.cr.execute("SET LOCAL lock_timeout = '250ms'")
+                self.env.cr.execute(
                     """
                     INSERT INTO ir_config_parameter
                         (key, value, create_uid, write_uid, create_date, write_date)
                     VALUES (%s, %s, %s, %s, NOW(), NOW())
                     ON CONFLICT (key)
-                    DO UPDATE SET
-                        value = (
-                            (CASE
-                                WHEN ir_config_parameter.value ~ '^[0-9]+$'
-                                THEN ir_config_parameter.value::bigint
-                                ELSE -1
-                             END) + %s
-                        )::text,
-                        write_uid = EXCLUDED.write_uid,
-                        write_date = NOW()
-                    RETURNING value
+                    DO UPDATE SET value = EXCLUDED.value,
+                                  write_uid = EXCLUDED.write_uid,
+                                  write_date = NOW()
                     """,
-                    [counter_key, str(count - 1), self.env.uid, self.env.uid, count],
+                    [param_key, str(last_seq_id), self.env.uid, self.env.uid],
                 )
-                row = rr_cr.fetchone()
-                rr_cr.commit()
-                end_ticket = int(row[0]) if row else count - 1
-                start_ticket = end_ticket - count + 1
+            self.env.cr.execute("SET LOCAL lock_timeout = '0'")
         except Exception as exc:
-            # Never block opportunity creation because the distribution pointer
-            # is busy. This fallback is used only when the 300ms lock limit is hit.
+            try:
+                self.env.cr.execute("SET LOCAL lock_timeout = '0'")
+            except Exception:
+                pass
+            # The selected salesperson is still valid. We only skip advancing
+            # the pointer for this request rather than blocking/failing Create.
             _logger.warning(
-                "Round-robin counter unavailable for %s (%s); using non-blocking fallback.",
-                counter_key, exc,
+                "Round-robin pointer update skipped because it was busy: %s",
+                exc,
             )
-            start_ticket = time.time_ns()
-
-        salespersons = []
-        seq_count = len(valid_sequences)
-        for offset in range(count):
-            next_seq = valid_sequences[(start_ticket + offset) % seq_count]
-            salespersons.append(next_seq.sales_person)
 
         _logger.info(
-            "Selected %s salesperson(s) with non-blocking RR key %s; first=%s",
-            len(salespersons), counter_key,
-            salespersons[0].name if salespersons else 'NONE',
+            "✅ Selected %s salesperson(s), last: %s (seq id=%s) → Saved param key %s",
+            len(salespersons), next_seq.sales_person.name, next_seq.id, param_key
         )
+
         return salespersons
