@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from datetime import datetime
 from datetime import timedelta
 
@@ -165,8 +165,9 @@ class OpportunityWizard(models.TransientModel):
           3. create crm.lead
           4. return the new form
 
-        No customer write, no round-robin pointer write, and no lead-name
-        sequence call are performed by this button.
+        No customer write and no round-robin pointer write are performed
+        by this button. Original lead naming and normal creator chatter logging
+        are preserved.
         """
         self.ensure_one()
         started = time.monotonic()
@@ -185,17 +186,7 @@ class OpportunityWizard(models.TransientModel):
                 time.monotonic() - assign_started,
             )
 
-        # IMPORTANT: pass the wizard name explicitly.  Without this value,
-        # crm.lead.create() calls _generate_lead_name(branch_id), which belongs
-        # to a separate sequence customization and may contend on shared state.
-        opportunity_name = (
-            (self.name or '').strip()
-            or (self.partner_id.name or '').strip()
-            or _("Opportunity")
-        )
-
         create_vals = {
-            'name': opportunity_name,
             'sla_duration': '00:00:00',
             'marketing_offer': self.marketing_offer.id,
             'call_type': self.call_type.id,
@@ -217,12 +208,13 @@ class OpportunityWizard(models.TransientModel):
         }
 
         create_started = time.monotonic()
+        # Keep only the source-safety context.
+        #
+        # Do NOT disable mail/thread tracking here: normal Odoo create logging
+        # must remain enabled so the creator/audit entry is stored in chatter.
         lead = self.env['crm.lead'].with_context(
             default_source_id=False,
             ellaithy_popup_source_id=False,
-            tracking_disable=True,
-            mail_notrack=True,
-            mail_create_nosubscribe=True,
         ).create(create_vals)
 
         _logger.info(
