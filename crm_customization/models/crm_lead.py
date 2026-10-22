@@ -10,51 +10,13 @@ from odoo.exceptions import AccessError
 
 class CrmLead(models.Model):
     _inherit = 'crm.lead'
-
-    # Keep Odoo's native UTM source separate from Ellaithy's custom
-    # res.source field (source_name).  The database relation is explicitly
-    # SET NULL so deleting an Odoo UTM source can never block on crm.lead.
-    source_id = fields.Many2one(
-        'utm.source',
-        string='Odoo Marketing Source',
-        ondelete='set null',
-        index=True,
-    )
-
-    def init(self):
-        """Repair legacy crm_lead_source_id_fkey delete behavior.
-
-        Older databases may still have this FK as NO ACTION/RESTRICT even
-        though the desired CRM behavior is to clear source_id when a UTM
-        source is removed.  Run before module data cleanup during upgrade.
-        """
-        self.env.cr.execute("""
-            SELECT c.confdeltype
-              FROM pg_constraint c
-             WHERE c.conname = 'crm_lead_source_id_fkey'
-               AND c.conrelid = 'crm_lead'::regclass
-        """)
-        row = self.env.cr.fetchone()
-        if row and row[0] != 'n':
-            self.env.cr.execute("""
-                ALTER TABLE crm_lead
-                DROP CONSTRAINT crm_lead_source_id_fkey
-            """)
-            self.env.cr.execute("""
-                ALTER TABLE crm_lead
-                ADD CONSTRAINT crm_lead_source_id_fkey
-                FOREIGN KEY (source_id)
-                REFERENCES utm_source(id)
-                ON DELETE SET NULL
-            """)
-
     
     branch_name = fields.Many2one('res.branch', string="Branch")
     area_name = fields.Many2one('res.area', string="Area")
     # brand_name = fields.Many2one('res.brand', string="Brand", required=True)
     brand_name2 = fields.Many2many('res.brand', string="Brand(s)")
 
-    source_name = fields.Many2one('res.source', string="Customer Source", index=True)
+    source_name = fields.Many2one('res.source', string="Source")
     sales_team = fields.Many2one('crm.team', string="Sales team")
     # sub_brand_name = fields.Many2one('res.sub.brand', string="Sub Brand", required=True)
     sub_brand_name2 = fields.Many2many('res.sub.brand', string="Sub Brand(s)")
@@ -140,23 +102,23 @@ class CrmLead(models.Model):
         # ---------------------------------------------------------
         if not vals.get('name'):
             branch_id = vals.get('branch_name')
+            print("Branch ID from vals:", branch_id)  # Debug print
 
             # ✅ fallback from user if not exist
             if not branch_id:
                 user = self.env.user
                 if user.sale_team_id and user.sale_team_id.branch_name:
                     branch_id = user.sale_team_id.branch_name.id
+                    print("Branch ID from user sale team:", branch_id)  # Debug print
 
             if branch_id:
                 vals['name'] = self._generate_lead_name(branch_id)
+                print("Generated lead name:", vals['name'])  # Debug print
             else:
                 vals['name'] = self.env['ir.sequence'].next_by_code('crm.lead') or 'New'
+                print("Generated lead name from default sequence:", vals['name'])  # Debug print
 
-        if (
-            vals.get('type') == 'opportunity'
-            and vals.get('partner_id')
-            and not self.env.context.get('skip_open_opportunity_check')
-        ):
+        if vals.get('type') == 'opportunity' and vals.get('partner_id'):
             # check if user has the special group to bypass the open opportunity restriction
             has_full_access = self.env.user.has_group(
                 'crm_customization.group_access_create_opportunity'

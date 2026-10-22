@@ -14,7 +14,7 @@
                             <field name="service_id" invisible="opportunity_type != 'service'" options="{'no_create': True, 'no_create_edit': True}"/>
                             <field name="area_id" options="{'no_create': True, 'no_create_edit': True}" required="1"/>
                             <field name="branch_id" options="{'no_create': True, 'no_create_edit': True}" required="1"/>
-                            <field name="source_id" string="Customer Source" options="{'no_create': True, 'no_create_edit': True}" required="1"/>
+                            <field name="source_id" options="{'no_create': True, 'no_create_edit': True}" required="1"/>
                             <!--                    <field name="sla_duration" />-->
                             <field name="marketing_offer"/>
                             <field name="call_type"/>

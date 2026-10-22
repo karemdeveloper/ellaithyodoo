@@ -20,7 +20,7 @@ class ResPartner(models.Model):
     company_custom_id = fields.Many2one('res.company.custom', string="Company")
     is_opportunity = fields.Boolean(string='Is Opportunity', default=False)
     survey_ids = fields.One2many('res.survey', 'partner_id', string="Surveys")
-    crm_source_id = fields.Many2one('res.source', string="Customer Source", required=True, index=True)
+    crm_source_id = fields.Many2one('res.source', string="Source", required=True)
 
     # Indexed to speed up duplicate-phone lookups (_compute_customer_already_exist),
     # which does a full search('phone', '=', ...)
@@ -33,26 +33,14 @@ class ResPartner(models.Model):
     mobile_normalized = fields.Char(string="Mobile (Normalized)", compute="_compute_normalized_phones", store=True, index=True)
 
     def action_open_create_opportunity_wizard(self):
-        """Open the opportunity wizard with defaults already prepared.
-
-        Passing the defaults directly avoids extra partner reads during the
-        transient model's ``default_get`` and makes the popup feel immediate.
-        """
-        self.ensure_one()
+        """Open the wizard popup"""
         return {
             'type': 'ir.actions.act_window',
             'name': 'Create Opportunity',
             'res_model': 'opportunity.wizard',
             'view_mode': 'form',
             'target': 'new',
-            'context': {
-                'active_id': self.id,
-                'default_partner_id': self.id,
-                'default_name': self.name or '',
-                'default_area_id': self.area_id.id or False,
-                'default_branch_id': self.branch_id.id or False,
-                'default_source_id': self.crm_source_id.id or False,
-            },
+            'context': {'active_id': self.id},
         }
 
     #############################################################################################
