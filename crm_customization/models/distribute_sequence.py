@@ -32,6 +32,37 @@ class DistributeSequence(models.Model):
             rec.state = member.state if member else False
 
     @api.model
+    def _get_round_robin_pointer(self, key):
+        """Read a round-robin pointer without ir.config_parameter cache work."""
+        self.env.cr.execute(
+            "SELECT value FROM ir_config_parameter WHERE key = %s LIMIT 1",
+            [key],
+        )
+        row = self.env.cr.fetchone()
+        try:
+            return int(row[0]) if row and row[0] else None
+        except (TypeError, ValueError):
+            return None
+
+    @api.model
+    def _set_round_robin_pointer(self, key, sequence_id):
+        """Persist the pointer without ``set_param`` registry-cache invalidation.
+
+        The transaction-level advisory lock serializes simultaneous assignments
+        for the same branch/shift, preserving fair round-robin behavior.
+        """
+        self.env.cr.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [key])
+        self.env.cr.execute(
+            """
+            INSERT INTO ir_config_parameter (key, value, create_uid, create_date, write_uid, write_date)
+            VALUES (%s, %s, %s, NOW(), %s, NOW())
+            ON CONFLICT (key) DO UPDATE
+            SET value = EXCLUDED.value, write_uid = EXCLUDED.write_uid, write_date = NOW()
+            """,
+            [key, str(sequence_id), self.env.uid, self.env.uid],
+        )
+
+    @api.model
     def _get_next_salesperson_for_branch(self, branch_id):
         """
         Shared round-robin distribution logic.
@@ -140,13 +171,11 @@ class DistributeSequence(models.Model):
         else:
             param_key = f'last_sequence_id_{branch.id}_{current_shift.id}'
 
-        config = self.env['ir.config_parameter'].sudo()
-        last_seq_id_str = config.get_param(param_key)
-
-        try:
-            last_seq_id = int(last_seq_id_str) if last_seq_id_str else None
-        except (TypeError, ValueError):
-            last_seq_id = None
+        # Direct SQL avoids ir.config_parameter cache invalidation overhead.
+        # Lock before reading so concurrent opportunity creations cannot choose
+        # the same turn for this branch/shift.
+        self.env.cr.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [param_key])
+        last_seq_id = self._get_round_robin_pointer(param_key)
 
         valid_ids = sequences.ids
 
@@ -188,8 +217,8 @@ class DistributeSequence(models.Model):
             salespersons.append(next_seq.sales_person)
             last_seq_id = next_seq.id
 
-        # 10. Save pointer (once for the whole batch)
-        config.set_param(param_key, str(last_seq_id))
+        # 10. Save pointer without clearing the Odoo registry/config cache.
+        self._set_round_robin_pointer(param_key, last_seq_id)
 
         _logger.info(
             "✅ Selected %s salesperson(s), last: %s (seq id=%s) → Saved param key %s",

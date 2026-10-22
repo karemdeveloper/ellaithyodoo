@@ -33,14 +33,26 @@ class ResPartner(models.Model):
     mobile_normalized = fields.Char(string="Mobile (Normalized)", compute="_compute_normalized_phones", store=True, index=True)
 
     def action_open_create_opportunity_wizard(self):
-        """Open the wizard popup"""
+        """Open the opportunity wizard with defaults already prepared.
+
+        Passing the defaults directly avoids extra partner reads during the
+        transient model's ``default_get`` and makes the popup feel immediate.
+        """
+        self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
             'name': 'Create Opportunity',
             'res_model': 'opportunity.wizard',
             'view_mode': 'form',
             'target': 'new',
-            'context': {'active_id': self.id},
+            'context': {
+                'active_id': self.id,
+                'default_partner_id': self.id,
+                'default_name': self.name or '',
+                'default_area_id': self.area_id.id or False,
+                'default_branch_id': self.branch_id.id or False,
+                'default_source_id': self.crm_source_id.id or False,
+            },
         }
 
     #############################################################################################

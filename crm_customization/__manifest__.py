@@ -1,6 +1,6 @@
 {
     'name': 'CRM Customization',
-    'version': '0.1',
+    'version': '18.0.0.2.0',
     'summary': 'Customizations for CRM Customers',
     'description': 'Add mandatory fields, and add opportunity for customer.',
     'category': 'CRM',
