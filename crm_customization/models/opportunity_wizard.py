@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from datetime import datetime
 from datetime import timedelta
 
@@ -166,22 +166,17 @@ class OpportunityWizard(models.TransientModel):
             time.monotonic() - create_started, lead.id,
         )
 
-        # Persist the salesperson to the customer only after the lead exists,
-        # and suppress chatter tracking for this technical synchronization.
-        # This removes res.partner.write() from the critical creation path.
-        if (
-            salesperson
-            and self.partner_id.user_id.id != salesperson.id
-        ):
-            partner_started = time.monotonic()
-            self.partner_id.with_context(
-                tracking_disable=True,
-                mail_notrack=True,
-                mail_create_nosubscribe=True,
-            ).write({'user_id': salesperson.id})
+        # Partner salesperson synchronization is not required to open the
+        # opportunity. Queue it instead of writing res.partner in the user's
+        # HTTP transaction, so a locked/busy partner can never delay Create.
+        if salesperson and self.partner_id.user_id.id != salesperson.id:
+            queue_started = time.monotonic()
+            self.env['crm.opportunity.partner.sync'].sudo().enqueue(
+                self.partner_id, salesperson, lead
+            )
             _logger.info(
-                "Create Opportunity timing: partner salesperson sync %.3fs",
-                time.monotonic() - partner_started,
+                "Create Opportunity timing: background sync enqueue %.3fs",
+                time.monotonic() - queue_started,
             )
 
         _logger.info(

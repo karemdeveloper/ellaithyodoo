@@ -1,15 +1,17 @@
 {
     'name': 'CRM Customization',
-    'version': '0.1',
+    'version': '18.0.4.0.0',
     'summary': 'Customizations for CRM Customers',
     'description': 'Add mandatory fields, and add opportunity for customer.',
     'category': 'CRM',
     'author': 'IBS',
+    'license': 'LGPL-3',
     'depends': ['base', 'crm','crm_sms','crm_iap_enrich','sale_crm','helpdesk'],
     'data': [
         'security/groups.xml',
         'security/ir.model.access.csv',
         'data/cron_check_inactive.xml',
+        'data/crm_opportunity_partner_sync_cron.xml',
         'data/survey_sequence.xml',
         'data/lost_opportunity_review_sequence.xml',
         'data/complaint_sequence.xml',
