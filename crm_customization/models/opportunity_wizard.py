@@ -223,6 +223,33 @@ class OpportunityWizard(models.TransientModel):
             lead.id,
         )
 
+        # Keep the customer salesperson aligned with the salesperson assigned
+        # to the new opportunity.  Tracking is disabled so this remains a very
+        # small write and does not restore the expensive mail/thread pipeline
+        # that was removed from the fast Create Opportunity path.
+        partner_sync_started = time.monotonic()
+        try:
+            if lead.partner_id and lead.user_id and lead.partner_id.user_id != lead.user_id:
+                lead.partner_id.with_context(
+                    tracking_disable=True,
+                    mail_notrack=True,
+                    mail_create_nosubscribe=True,
+                ).sudo().write({
+                    'user_id': lead.user_id.id,
+                })
+            _logger.info(
+                "Create Opportunity timing: partner salesperson sync %.3fs",
+                time.monotonic() - partner_sync_started,
+            )
+        except Exception as exc:
+            # Never lose an already-created opportunity because the customer
+            # salesperson synchronization failed.
+            _logger.warning(
+                "Create Opportunity: partner salesperson sync failed after %.3fs: %s",
+                time.monotonic() - partner_sync_started,
+                exc,
+            )
+
         # Lightweight creator/audit chatter entry.
         #
         # Full mail.thread tracking is intentionally kept disabled above for
