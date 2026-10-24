@@ -4,7 +4,8 @@
         <field name="name">bank.offer.bank.list</field>
         <field name="model">bank.offer.bank</field>
         <field name="arch" type="xml">
-            <list string="Banks" default_order="sequence,name">
+            <list string="Banks" default_order="display_priority,sequence,name">
+                <field name="display_priority" column_invisible="1"/>
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="code" optional="show"/>

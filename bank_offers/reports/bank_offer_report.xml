@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_bank_offer_assessment" model="ir.actions.report">
+        <field name="name">Bank Offer Recommendation</field>
+        <field name="model">bank.offer.assessment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">bank_offers.report_bank_offer_assessment</field>
+        <field name="report_file">bank_offers.report_bank_offer_assessment</field>
+        <field name="print_report_name">'Bank Offers - %s' % (object.name or '')</field>
+    </record>
+
+    <template id="report_bank_offer_assessment">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page" dir="rtl" style="font-family: Arial, sans-serif;">
+                        <h2 class="text-center">نتيجة عروض البنوك</h2>
+
+                        <table class="table table-sm table-bordered" style="margin-top:20px;">
+                            <tbody>
+                                <tr>
+                                    <td><strong>العميل</strong></td>
+                                    <td><span t-field="o.customer_name"/></td>
+                                    <td><strong>تاريخ اليوم</strong></td>
+                                    <td><span t-field="o.today_date"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>سعر السيارة</strong></td>
+                                    <td><span t-field="o.car_price"/></td>
+                                    <td><strong>عدد شهور التقسيط</strong></td>
+                                    <td><span t-field="o.term_months"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>المقدم</strong></td>
+                                    <td><span t-field="o.down_payment"/></td>
+                                    <td><strong>مبلغ التمويل</strong></td>
+                                    <td><span t-field="o.finance_amount"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <table class="table table-sm table-bordered" style="margin-top:20px; font-size:12px;">
+                            <thead>
+                                <tr>
+                                    <th>الترتيب</th>
+                                    <th>البنك</th>
+                                    <th>البرنامج</th>
+                                    <th>الفائدة %</th>
+                                    <th>القسط الشهري</th>
+                                    <th>مصاريف الحظر الإلكتروني</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.result_ids" t-as="line">
+                                    <td><span t-field="line.rank"/></td>
+                                    <td><span t-field="line.bank_id"/></td>
+                                    <td><span t-field="line.program_id"/></td>
+                                    <td><span t-field="line.annual_interest_rate"/></td>
+                                    <td><span t-field="line.monthly_installment"/></td>
+                                    <td><span t-field="line.sale_ban_fee"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top:30px; font-size:13px; line-height:1.8;">
+                            <p><strong>الشروط والأحكام:</strong></p>
+                            <p>• تم احتساب قيمة الفائدة والقسط الشهري بشكل مبدئي لحين صدور الموافقة البنكية بالقيمة النهائية والصحيحة.</p>
+                            <p>• السعر النهائي للسيارة يُحدد عند الاستلام.</p>
+                            <p>• تطبق الشروط والأحكام.</p>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

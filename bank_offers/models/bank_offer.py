@@ -9,13 +9,14 @@ class BankOfferBank(models.Model):
     _name = "bank.offer.bank"
     _description = "Financing Bank"
     _inherit = ["mail.thread", "mail.activity.mixin"]
-    _order = "sequence, name"
+    _order = "display_priority, sequence, name"
 
     name = fields.Char(required=True, tracking=True)
     code = fields.Char(tracking=True)
     sequence = fields.Integer(default=10)
+    display_priority = fields.Integer(compute="_compute_display_priority", store=True, index=True)
     active = fields.Boolean(default=True, tracking=True)
-    sale_ban_fee = fields.Monetary(string="Default Sale-ban Fee", tracking=True)
+    sale_ban_fee = fields.Monetary(string="مصاريف الحظر الإلكتروني", tracking=True)
     currency_id = fields.Many2one(
         "res.currency",
         default=lambda self: self.env.company.currency_id.id,
@@ -30,6 +31,12 @@ class BankOfferBank(models.Model):
     notes = fields.Text()
     program_ids = fields.One2many("bank.offer.program", "bank_id", string="Programs")
     program_count = fields.Integer(compute="_compute_program_count")
+
+    @api.depends("code")
+    def _compute_display_priority(self):
+        priority = {"ADIB": 1, "NBK": 2, "ABK": 3, "FAB": 4}
+        for rec in self:
+            rec.display_priority = priority.get((rec.code or "").upper(), 100)
 
     @api.depends("program_ids")
     def _compute_program_count(self):
@@ -247,8 +254,8 @@ class BankOfferRate(models.Model):
     insurance_rate_pct = fields.Float(string="Comprehensive Insurance %")
     admin_fee_pct = fields.Float(string="Administrative Fee %")
     sale_ban_fee = fields.Monetary(
-        string="Sale-ban Fee",
-        help="Leave zero to use the bank default sale-ban fee.",
+        string="مصاريف الحظر الإلكتروني",
+        help="Leave zero to use the bank default electronic ban fee.",
     )
     notes = fields.Char()
 
@@ -305,6 +312,7 @@ class BankOfferAssessment(models.Model):
     finance_amount = fields.Monetary(compute="_compute_financing", store=True)
     term_months = fields.Integer(default=60, required=True, tracking=True)
     assessment_date = fields.Date(default=fields.Date.context_today, required=True)
+    today_date = fields.Date(string="تاريخ اليوم", compute="_compute_today_date")
     state = fields.Selection([
         ("draft", "Draft"),
         ("calculated", "Calculated"),
@@ -319,6 +327,11 @@ class BankOfferAssessment(models.Model):
             if not vals.get("name") or vals.get("name") == _("New"):
                 vals["name"] = self.env["ir.sequence"].next_by_code("bank.offer.assessment") or _("New")
         return super().create(vals_list)
+
+    def _compute_today_date(self):
+        today = fields.Date.context_today(self)
+        for rec in self:
+            rec.today_date = today
 
     @api.depends("car_price", "down_payment")
     def _compute_financing(self):
@@ -444,7 +457,17 @@ class BankOfferAssessment(models.Model):
 
             # Best financial offer first. Approval speed is a tie-breaker,
             # not the primary ranking criterion.
+            # Bank display priority requested by business:
+            # ADIB -> NBK -> ABK -> FAB, then all other banks. Within the same
+            # bank priority, keep the strongest financial offer first.
+            bank_priority = {
+                "ADIB": 1,
+                "NBK": 2,
+                "ABK": 3,
+                "FAB": 4,
+            }
             candidates.sort(key=lambda c: (
+                bank_priority.get((c["program"].bank_id.code or "").upper(), 100),
                 c["monthly"],
                 c["rate"].annual_interest_rate,
                 c["program"].approval_days,
@@ -472,7 +495,25 @@ class BankOfferAssessment(models.Model):
                     "sale_ban_fee": c["sale_ban_fee"],
                 })
             rec.state = "calculated"
-        return True
+
+        # Open a dedicated result popup after calculation. This keeps the
+        # assessment record as the single source of truth while giving sales
+        # users a clean printable summary immediately after calculation.
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Financing Recommendation"),
+            "res_model": "bank.offer.assessment",
+            "res_id": self.id,
+            "view_mode": "form",
+            "view_id": self.env.ref("bank_offers.view_bank_offer_assessment_result_popup").id,
+            "target": "new",
+            "context": {"form_view_initial_mode": "readonly"},
+        }
+
+    def action_print_recommendation(self):
+        self.ensure_one()
+        return self.env.ref("bank_offers.action_report_bank_offer_assessment").report_action(self)
 
     def action_reset_draft(self):
         for rec in self:
@@ -505,4 +546,4 @@ class BankOfferAssessmentResult(models.Model):
     insurance_rate_pct = fields.Float(readonly=True)
     annual_insurance_amount = fields.Monetary(readonly=True)
     admin_fee = fields.Monetary(readonly=True)
-    sale_ban_fee = fields.Monetary(readonly=True)
+    sale_ban_fee = fields.Monetary(string="مصاريف الحظر الإلكتروني", readonly=True)

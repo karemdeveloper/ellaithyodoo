@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- FAB is added to the bank master. The Python display_priority field enforces
+         ADIB -> NBK -> ABK -> FAB for both existing and newly-created bank records. -->
+    <record id="bank_fab" model="bank.offer.bank">
+        <field name="name">First Abu Dhabi Bank (FAB)</field>
+        <field name="code">FAB</field>
+        <field name="sequence">4</field>
+        <field name="sale_ban_fee">0</field>
+    </record>
+</odoo>

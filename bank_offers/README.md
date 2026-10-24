@@ -23,3 +23,11 @@ It is **not** intended for Odoo's browser-based **Import Module** feature, becau
 ## Permissions
 - Bank Offers User
 - Bank Offers Configuration Manager
+
+## 18.0.1.3.0
+- Bank display/recommendation priority: ADIB, NBK, ABK, FAB, then other banks.
+- Added FAB master bank record.
+- Renamed sale-ban fee UI to مصاريف الحظر الإلكتروني and exposed it in results.
+- Calculation now opens a result popup with installment months and today's date.
+- Added PDF print action from the result popup.
+- Added required Arabic terms and conditions to popup and PDF output.

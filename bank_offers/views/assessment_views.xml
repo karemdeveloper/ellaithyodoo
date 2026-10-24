@@ -17,8 +17,8 @@
         <field name="name">bank.offer.assessment.list</field><field name="model">bank.offer.assessment</field>
         <field name="arch" type="xml">
             <list decoration-success="state == 'calculated'">
-                <field name="name"/><field name="assessment_date"/><field name="customer_name"/><field name="job_type_id"/>
-                <field name="monthly_income"/><field name="car_price"/><field name="down_payment"/><field name="term_months"/>
+                <field name="name"/><field name="assessment_date" string="تاريخ التقييم"/><field name="customer_name"/><field name="job_type_id"/>
+                <field name="monthly_income"/><field name="car_price"/><field name="down_payment"/><field name="term_months" string="عدد شهور التقسيط"/>
                 <field name="eligible_count"/><field name="user_id" groups="bank_offers.group_bank_offers_manager"/><field name="state" widget="badge"/>
             </list>
         </field>
@@ -44,14 +44,14 @@
                         <group string="Vehicle &amp; Finance">
                             <field name="vehicle_type"/><field name="vehicle_model_year" invisible="vehicle_type != 'used'"/>
                             <field name="car_price"/><field name="down_payment"/><field name="downpayment_pct" readonly="1"/>
-                            <field name="finance_amount" readonly="1"/><field name="term_months"/>
+                            <field name="finance_amount" readonly="1"/><field name="term_months" string="عدد شهور التقسيط"/>
                         </group>
                     </group>
                     <group>
-                        <field name="assessment_date"/><field name="user_id" groups="bank_offers.group_bank_offers_manager"/>
+                        <field name="assessment_date" string="تاريخ التقييم"/><field name="user_id" groups="bank_offers.group_bank_offers_manager"/>
                         <field name="eligible_count" readonly="1"/>
                     </group>
-                    <separator string="Top 3 Recommended Offers"/>
+                    <separator string="Recommended Offers"/>
                     <field name="result_ids" readonly="1" nolabel="1">
                         <list create="0" edit="0" delete="0" decoration-success="rank == 1" decoration-info="rank == 2">
                             <field name="rank"/>
@@ -66,12 +66,64 @@
                             <field name="insurance_rate_pct" optional="show"/>
                             <field name="annual_insurance_amount" optional="show"/>
                             <field name="admin_fee" optional="show"/>
-                            <field name="sale_ban_fee" optional="show"/>
+                            <field name="sale_ban_fee" string="مصاريف الحظر الإلكتروني" optional="show"/>
                         </list>
                     </field>
                     <field name="notes" placeholder="Sales notes..."/>
                 </sheet>
                 <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_bank_offer_assessment_result_popup" model="ir.ui.view">
+        <field name="name">bank.offer.assessment.result.popup</field>
+        <field name="model">bank.offer.assessment</field>
+        <field name="arch" type="xml">
+            <form string="نتيجة عروض البنوك" create="0" edit="0" delete="0">
+                <sheet>
+                    <div class="oe_title">
+                        <h2>نتيجة عروض البنوك</h2>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="customer_name" readonly="1"/>
+                            <field name="car_price" readonly="1"/>
+                            <field name="finance_amount" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="term_months" string="عدد شهور التقسيط" readonly="1"/>
+                            <field name="today_date" string="تاريخ اليوم" readonly="1"/>
+                            <field name="eligible_count" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <separator string="العروض المتاحة"/>
+                    <field name="result_ids" readonly="1" nolabel="1">
+                        <list create="0" edit="0" delete="0" decoration-success="rank == 1" decoration-info="rank == 2">
+                            <field name="rank"/>
+                            <field name="bank_id"/>
+                            <field name="program_id"/>
+                            <field name="annual_interest_rate"/>
+                            <field name="monthly_installment"/>
+                            <field name="sale_ban_fee" string="مصاريف الحظر الإلكتروني"/>
+                            <field name="approval_days" optional="show"/>
+                            <field name="insurance_required" optional="show"/>
+                            <field name="admin_fee" optional="show"/>
+                        </list>
+                    </field>
+
+                    <div class="mt-4" dir="rtl" style="font-size: 14px;">
+                        <p><strong>الشروط والأحكام:</strong></p>
+                        <p>• تم احتساب قيمة الفائدة والقسط الشهري بشكل مبدئي لحين صدور الموافقة البنكية بالقيمة النهائية والصحيحة.</p>
+                        <p>• السعر النهائي للسيارة يُحدد عند الاستلام.</p>
+                        <p>• تطبق الشروط والأحكام.</p>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_print_recommendation" type="object" string="طباعة" class="btn-primary" icon="fa-print"/>
+                    <button string="إغلاق" special="cancel" class="btn-secondary"/>
+                </footer>
             </form>
         </field>
     </record>
