@@ -1,5 +1,6 @@
 from math import pow
 import re
+import unicodedata
 
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
@@ -32,11 +33,30 @@ class BankOfferBank(models.Model):
     program_ids = fields.One2many("bank.offer.program", "bank_id", string="Programs")
     program_count = fields.Integer(compute="_compute_program_count")
 
-    @api.depends("code")
+    @api.depends("code", "name")
     def _compute_display_priority(self):
-        priority = {"ADIB": 1, "NBK": 2, "ABK": 3, "FAB": 4}
         for rec in self:
-            rec.display_priority = priority.get((rec.code or "").upper(), 100)
+            rec.display_priority = rec._business_priority()
+
+    def _business_priority(self):
+        """Business display priority requested by Ellaithy.
+
+        Match both code and name because some imported bank records do not have
+        the expected short code populated.
+        """
+        self.ensure_one()
+        code = (self.code or "").strip().upper()
+        name = unicodedata.normalize("NFKC", self.name or "").strip().lower()
+
+        if code == "ADIB" or "abu dhabi islamic" in name or "أبوظبي الإسلامي" in name or "ابوظبي الاسلامي" in name:
+            return 1
+        if code == "NBK" or "national bank of kuwait" in name or "بنك الكويت الوطني" in name:
+            return 2
+        if code == "ABK" or "al ahli bank of kuwait" in name or "الأهلي الكويتي" in name or "الاهلي الكويتي" in name:
+            return 3
+        if code == "FAB" or "first abu dhabi bank" in name or "بنك أبوظبي الأول" in name or "بنك ابوظبي الاول" in name:
+            return 4
+        return 100
 
     @api.depends("program_ids")
     def _compute_program_count(self):
@@ -460,18 +480,13 @@ class BankOfferAssessment(models.Model):
             # Bank display priority requested by business:
             # ADIB -> NBK -> ABK -> FAB, then all other banks. Within the same
             # bank priority, keep the strongest financial offer first.
-            bank_priority = {
-                "ADIB": 1,
-                "NBK": 2,
-                "ABK": 3,
-                "FAB": 4,
-            }
             candidates.sort(key=lambda c: (
-                bank_priority.get((c["program"].bank_id.code or "").upper(), 100),
+                c["program"].bank_id._business_priority(),
                 c["monthly"],
                 c["rate"].annual_interest_rate,
                 c["program"].approval_days,
                 c["program"].bank_id.sequence,
+                c["program"].bank_id.id,
             ))
             rec.eligible_count = len(candidates)
             # Show every eligible offer. The user can see the full market
@@ -496,19 +511,26 @@ class BankOfferAssessment(models.Model):
                 })
             rec.state = "calculated"
 
-        # Open a dedicated result popup after calculation. This keeps the
-        # assessment record as the single source of truth while giving sales
-        # users a clean printable summary immediately after calculation.
+        # Always open the complete assessment summary, never a single result line.
+        self.ensure_one()
+        return self.action_open_result_popup()
+
+    def action_open_result_popup(self):
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",
-            "name": _("Financing Recommendation"),
+            "name": _("Recommended Bank Offers"),
             "res_model": "bank.offer.assessment",
             "res_id": self.id,
             "view_mode": "form",
-            "view_id": self.env.ref("bank_offers.view_bank_offer_assessment_result_popup").id,
+            "views": [(self.env.ref("bank_offers.view_bank_offer_assessment_result_popup").id, "form")],
             "target": "new",
-            "context": {"form_view_initial_mode": "readonly"},
+            "context": {
+                "form_view_initial_mode": "readonly",
+                "create": False,
+                "edit": False,
+                "delete": False,
+            },
         }
 
     def action_print_recommendation(self):

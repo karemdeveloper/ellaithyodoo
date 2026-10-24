@@ -18,24 +18,12 @@
 
                         <table class="table table-sm table-bordered" style="margin-top:20px;">
                             <tbody>
-                                <tr>
-                                    <td><strong>العميل</strong></td>
-                                    <td><span t-field="o.customer_name"/></td>
-                                    <td><strong>تاريخ اليوم</strong></td>
-                                    <td><span t-field="o.today_date"/></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>سعر السيارة</strong></td>
-                                    <td><span t-field="o.car_price"/></td>
-                                    <td><strong>عدد شهور التقسيط</strong></td>
-                                    <td><span t-field="o.term_months"/></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>المقدم</strong></td>
-                                    <td><span t-field="o.down_payment"/></td>
-                                    <td><strong>مبلغ التمويل</strong></td>
-                                    <td><span t-field="o.finance_amount"/></td>
-                                </tr>
+                                <tr><td><strong>اسم العميل</strong></td><td><span t-field="o.customer_name"/></td><td><strong>الهاتف</strong></td><td><span t-field="o.phone"/></td></tr>
+                                <tr><td><strong>الدخل الشهري</strong></td><td><span t-field="o.monthly_income"/></td><td><strong>نوع الوظيفة</strong></td><td><span t-field="o.job_type_id"/></td></tr>
+                                <tr><td><strong>العمر</strong></td><td><span t-field="o.age"/></td><td><strong>تاريخ اليوم</strong></td><td><span t-field="o.today_date"/></td></tr>
+                                <tr><td><strong>نوع السيارة</strong></td><td><span t-field="o.vehicle_type"/></td><td><strong>عدد شهور التقسيط</strong></td><td><span t-field="o.term_months"/></td></tr>
+                                <tr><td><strong>سعر السيارة</strong></td><td><span t-field="o.car_price"/></td><td><strong>المقدم</strong></td><td><span t-field="o.down_payment"/></td></tr>
+                                <tr><td><strong>مبلغ التمويل</strong></td><td><span t-field="o.finance_amount"/></td><td><strong>عدد العروض المتاحة</strong></td><td><span t-field="o.eligible_count"/></td></tr>
                             </tbody>
                         </table>
 

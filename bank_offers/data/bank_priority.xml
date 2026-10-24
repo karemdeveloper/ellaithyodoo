@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- FAB is added to the bank master. The Python display_priority field enforces
-         ADIB -> NBK -> ABK -> FAB for both existing and newly-created bank records. -->
+    <!-- Business priority requested by Ellaithy. These records deliberately
+         update sequence/code on every module upgrade. -->
+    <record id="bank_adib" model="bank.offer.bank">
+        <field name="code">ADIB</field>
+        <field name="sequence">1</field>
+    </record>
+    <record id="bank_nbk" model="bank.offer.bank">
+        <field name="code">NBK</field>
+        <field name="sequence">2</field>
+    </record>
+    <record id="bank_abk" model="bank.offer.bank">
+        <field name="code">ABK</field>
+        <field name="sequence">3</field>
+    </record>
     <record id="bank_fab" model="bank.offer.bank">
         <field name="name">First Abu Dhabi Bank (FAB)</field>
         <field name="code">FAB</field>
