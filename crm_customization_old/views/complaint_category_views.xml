@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- =================== COMPLAINT Category =================== -->
+    <record id="view_complaint_category_list" model="ir.ui.view">
+        <field name="name">complaint.category.list</field>
+        <field name="model">complaint.category</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+
+            </list>
+        </field>
+    </record>
+
+    <record id="view_complaint_category_form" model="ir.ui.view">
+        <field name="name">complaint.category.form</field>
+        <field name="model">complaint.category</field>
+        <field name="arch" type="xml">
+            <form>
+
+
+                <sheet>
+                    <group>
+                            <field name="name" string="Complaint Category Name"/>
+                    </group>
+
+                </sheet>
+                <!-- Attachment preview -->
+                <div class="o_attachment_preview"/>
+                <!-- Chatter -->
+                <chatter reload_on_attachment="True"/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_complaint_category" model="ir.actions.act_window">
+        <field name="name">Complaint</field>
+        <field name="res_model">complaint.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_complaint_category"
+              name="Complaint Categories"
+              parent="crm.crm_menu_config"
+              action="action_complaint_category"
+              sequence="3"/>
+
+
+</odoo>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- =================== INACTIVE REQUEST =================== -->
+    <record id="view_inactive_request_list" model="ir.ui.view">
+        <field name="name">inactive.request.list</field>
+        <field name="model">inactive.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="inactive_reason"/>
+                <field name="salesperson_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_inactive_request_form" model="ir.ui.view">
+        <field name="name">inactive.request.form</field>
+        <field name="model">inactive.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve"
+                            string="Approve"
+                            type="object"
+                            invisible="state!='to_approve'"
+                            groups="crm_customization.group_confirmation_inactive_requests"
+                            class="btn-primary"/>
+
+                    <button name="action_refuse"
+                            string="Refuse"
+                            type="object"
+                            invisible="state!='to_approve'"
+                            groups="crm_customization.group_confirmation_inactive_requests"
+
+                            class="btn-danger"/>
+                    <field name="state" widget="statusbar" statusbar_visible="to_approve,approved,refused"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="date" readonly="state=='approved'"/>
+                            <field name="inactive_reason" readonly="state=='approved'"/>
+                           <field name="salesperson_id"
+                                   domain="[
+                                       '|', '|',
+                                       ('id', '=', uid),
+                                       ('sale_team_id.user_id', '=', uid),
+                                       ('sale_team_id.branch_name.branch_manager', '=', uid)
+                                   ]"/>
+                        </group>
+                        <group>
+
+                            <field name="date_from" required="1" readonly="state=='approved'"/>
+                            <field name="date_to" required="1" readonly="state=='approved'"/>
+                            <field name="team_leader" invisible="1"/>
+
+                        </group>
+                    </group>
+                </sheet>
+                <!-- Attachment preview -->
+                <div class="o_attachment_preview"/>
+                <!-- Chatter -->
+                <chatter reload_on_attachment="True"/>
+            </form>
+        </field>
+    </record>
+    <!-- =================== INACTIVE REQUEST SEARCH =================== -->
+    <record id="view_inactive_request_search" model="ir.ui.view">
+        <field name="name">inactive.request.search</field>
+        <field name="model">inactive.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <!-- Search by Salesperson -->
+                <field name="salesperson_id"/>
+
+                <!-- Optional quick filters -->
+                <filter string="My Requests"
+                        name="my_requests"
+                        domain="[('salesperson_id', '=', uid)]"/>
+
+                <separator/>
+
+                <!-- Group By -->
+                <group expand="0" string="Group By">
+                    <filter string="Salesperson"
+                            name="group_by_salesperson"
+                            context="{'group_by': 'salesperson_id'}"/>
+
+                    <filter string="State"
+                            name="group_by_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+
+    <record id="action_inactive_request" model="ir.actions.act_window">
+        <field name="name">Inactive Request</field>
+        <field name="res_model">inactive.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_inactive_request_search"/>
+
+
+    </record>
+    <menuitem id="menu_inactive_request"
+              name="Inactive Request"
+              parent="crm.crm_menu_root"
+              action="action_inactive_request"
+              sequence="26"/>
+
+
+</odoo>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- =================== COMPLAINT REASON =================== -->
+    <record id="view_res_complaint_list" model="ir.ui.view">
+        <field name="name">res.complaint.list</field>
+        <field name="model">res.complaint</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="customer_id"/>
+                <field name="primary_phone"/>
+                <field name="salesperson_id"/>
+                <field name="complaint_reason_id"/>
+                <field name="complaint_type_id"/>
+                <field name="branch_id"/>
+                <field name="department"/>
+                <field name="assigned_to_ids" widget="many2many_tags"/>
+                <field name="validity"/>
+                <field name="sla_duration"/>
+                <field name="complaint_duration"/>
+                <field name="late_days"/>
+                <field name="days_since_creation"/>
+                <field name="creation_late_days"/>
+                <field name="complaint_category_id"/>
+                <field name="solving_date"/>
+                <field name="create_at"/>
+                <field name="serial_number"/>
+                <field name="complaint_state" widget="badge" decoration-info="complaint_state=='new'"
+                       decoration-warning="complaint_state=='under_investigate'"
+                       decoration-success="complaint_state=='solved'"
+                />
+            </list>
+        </field>
+    </record>
+
+    <record id="view_res_complaint_form" model="ir.ui.view">
+        <field name="name">res.complaint</field>
+        <field name="model">res.complaint</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="complaint_state" widget="statusbar" statusbar_visible="new,under_investigate,solved"/>
+
+                    <button name="action_send_complaint_email"
+                            string="Send Email"
+                            type="object"
+                            class="btn-secondary"
+                            icon="fa-envelope"/>
+
+                    <button name="action_under_investigate"
+                            string="Start Investigation"
+                            type="object"
+                            class="btn-primary"
+                            invisible="complaint_state !=  'new'"/>
+
+                    <button name="action_mark_solved"
+                            string="Mark Solved"
+                            type="object"
+                            class="btn-success"
+                            invisible="complaint_state != 'under_investigate'"/>
+                    <button name="action_reset_to_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            invisible="complaint_state != 'solved'"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="can_edit_after_solved" invisible="1"/>
+                            <field name="date" readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                            <field name="customer_id" readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                            <field name="primary_phone" readonly="1"/>
+                            <field name="salesperson_id" readonly="1"/>
+                            <field name="complaint_reason_id"
+                                   readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                            <field name="complaint_user_id"
+                                   invisible="not complaint_reason_id or not complaint_reason_id.has_user"/>
+                            <field name="complaint_type_id"
+                                   readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                        </group>
+                        <group>
+                            <field name="branch_id" readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                            <field name="department" readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                            <field name="assigned_to_ids" widget="many2many_tags"
+                                   readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                            <field name="escalation_line_id"
+                                   readonly="complaint_state in ['under_investigate', 'solved'] and not can_edit_after_solved"/>
+                            <field name="validity"/>
+                            <field name="ticket_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="sla_duration" readonly="1"/>
+                            <field name="complaint_duration" readonly="1"/>
+                            <field name="late_days" readonly="1"/>
+                            <field name="days_since_creation" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="solving_date" readonly="1"/>
+                            <field name="creation_late_days" readonly="1"/>
+                            <field name="complaint_category_id"/>
+                            <field name="create_at"/>
+                            <field name="serial_number" required="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <!-- Attachment preview -->
+                <div class="o_attachment_preview"/>
+                <!-- Chatter -->
+                <chatter reload_on_attachment="True"/>
+            </form>
+        </field>
+    </record>
+    <!-- =================== PIVOT VIEW =================== -->
+    <record id="view_res_complaint_pivot" model="ir.ui.view">
+        <field name="name">res.complaint.pivot</field>
+        <field name="model">res.complaint</field>
+        <field name="arch" type="xml">
+            <pivot string="Complaints Analysis">
+                <field name="complaint_state" type="col"/>
+                <field name="complaint_reason_id" type="row"/>
+                <field name="complaint_type_id" type="row"/>
+                <field name="branch_id" type="row"/>
+                <field name="department" type="row"/>
+                <field name="salesperson_id" type="row"/>
+                <field name="complaint_duration" type="measure" operator="avg"/>
+                <field name="late_days" type="measure" operator="sum"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_res_complaint" model="ir.actions.act_window">
+        <field name="name">Complaint</field>
+        <field name="res_model">res.complaint</field>
+        <field name="view_mode">list,form,pivot</field>
+    </record>
+    <menuitem id="menu_res_complaint"
+              name="Complaint"
+              parent="crm.crm_menu_root"
+              action="action_res_complaint"
+              sequence="27"/>
+
+
+</odoo>

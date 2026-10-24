@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Inherit the Customer Form View -->
+    <record id="view_partner_form_inherit_crm_customization" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.crm.customization</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_survey"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-list"
+                        string="Surveys">
+                    <field string="Surveys" name="survey_count" widget="statinfo"/>
+                </button>
+                <button name="action_view_complaint"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-comments">
+                    <field string="Complaints" name="complaint_count" widget="statinfo"/>
+                </button>
+            </xpath>
+            <xpath expr="//div[@name='warning_tax']" position="before">
+                <header>
+                    <button string="Create opportunity" name="action_open_create_opportunity_wizard" type="object"/>
+                    <button string="Create Survey" name="action_create_survey" type="object"/>
+                    <button name="action_create_complaint" type="object" string="New Complaint" class="oe_stat_button" groups="crm_customization.group_complaint_customer_care_manager"
+                            icon="fa-plus"/>
+                </header>
+            </xpath>
+
+            <!-- Make Name mandatory  -->
+            <field name="name" position="attributes">
+                <attribute name="required">1</attribute>
+            </field>
+
+
+            <!-- Make Phone mandatory + change label -->
+            <field name="phone" position="attributes">
+                <attribute name="required">1</attribute>
+                <attribute name="string">Phone Primary</attribute>
+                <attribute name="groups">crm_customization.group_crm_customer</attribute>
+            </field>
+
+            <!-- Change Mobile label -->
+            <field name="mobile" position="attributes">
+                <attribute name="string">Phone Secondary</attribute>
+                <attribute name="groups">crm_customization.group_crm_customer</attribute>
+            </field>
+
+
+            <!-- category_id -->
+            <xpath expr="//field[@name='category_id']" position="attributes">
+                <attribute name="groups">crm_customization.group_crm_customer</attribute>
+            </xpath>
+
+
+            <!-- website -->
+            <xpath expr="//field[@name='website']" position="attributes">
+                <attribute name="groups">crm_customization.group_sales_customer</attribute>
+            </xpath>
+            <xpath expr="//form[1]/sheet[1]/group[1]/group[1]" position="attributes">
+                <attribute name="groups">crm_customization.group_sales_customer</attribute>
+            </xpath>
+
+
+            <!-- email -->
+            <xpath expr="//field[@name='email']" position="attributes">
+                <attribute name="groups">crm_customization.group_crm_customer</attribute>
+            </xpath>
+
+            <!-- function -->
+            <xpath expr="//field[@name='function']" position="attributes">
+                <attribute name="groups">crm_customization.group_sales_customer</attribute>
+            </xpath>
+
+            <!-- phone_sanitized -->
+            <xpath expr="//field[@name='phone_sanitized']" position="attributes">
+                <attribute name="groups">crm_customization.group_sales_customer</attribute>
+            </xpath>
+
+            <!-- company_type -->
+            <xpath expr="//field[@name='company_type']" position="replace">
+
+            </xpath>
+            <xpath expr="//field[@name='parent_id']" position="replace">
+
+            </xpath>
+            <xpath expr="//field[@name='title']" position="replace">
+
+            </xpath>
+
+            <!-- Add widget after phone field to show duplicate warning -->
+            <xpath expr="//field[@name='phone']" position="after">
+                <!-- Hidden field to store the Many2one relation -->
+                <field name="customer_already_exist_id" invisible="1"/>
+                <!-- Widget field for display -->
+                <field name="customer_already_exist_widget" 
+                       widget="open_existing_customer_button"
+                       nolabel="1"
+                       colspan="2"/>
+            </xpath>
+            
+
+            <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/div[3]" position="after">
+                <field name="user_id" string="Salesperson" options="{'no_create': True}" groups="crm_customization.group_crm_customer_sales_person"/>
+                <field name="company_type" groups="crm_customization.group_crm_customer"/>
+                <field name="area_id" groups="crm_customization.group_crm_customer" options="{'no_create': True}" required="1"/>
+                <field name="branch_id" groups="crm_customization.group_crm_customer"  options="{'no_create': True}" required="1"/>
+                <field name="crm_source_id" groups="crm_customization.group_crm_customer" options="{'no_create': True}" required="1"/>
+                <field name="company_id" groups="crm_customization.group_sales_customer"/>
+                <field name="company_custom_id" groups="crm_customization.group_crm_customer"/>
+                <field name="is_opportunity" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='lang']" position="replace"/>
+            
+            <!-- Add groups to pages instead of replacing them -->
+            <xpath expr="//page[@name='sales_purchases']" position="attributes">
+                <attribute name="groups">crm_customization.group_sales_customer</attribute>
+            </xpath>
+            <xpath expr="//page[@name='contact_addresses']" position="attributes">
+                <attribute name="groups">crm_customization.group_sales_customer</attribute>
+            </xpath>
+            <xpath expr="//page[@name='accounting_disabled']" position="attributes">
+                <attribute name="groups">crm_customization.group_sales_customer</attribute>
+            </xpath>
+            <xpath expr="//page[@name='accounting']" position="attributes">
+                <attribute name="groups">crm_customization.group_sales_customer</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='company_type']" position="attributes">
+                <attribute name="string">Customer Type</attribute>
+            </xpath>
+
+        </field>
+    </record>
+    <record id="view_partner_list_inherit_crm_customization" model="ir.ui.view">
+        <field name="name">res.partner.list.inherit.crm.customization</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="attributes">
+                <attribute name="string">Primary Phone</attribute>
+                <attribute name="widget">phone</attribute>
+
+            </xpath>
+            <xpath expr="//field[@name='phone']" position="after">
+                <field name="mobile" optional="show" string='Secondary Phone' widget="phone"/>
+                <field name="type" optional="show"/>
+                <field name="company_name" optional="show"/>
+                <field name="area_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="base.action_partner_form" model="ir.actions.act_window">
+        <field name="view_mode">list,kanban,form,activity</field>
+        <field name="view_id" eval="False"/>
+    </record>
+    <!-- ✅ Add Search View Inheritance -->
+    <record id="view_res_partner_search_inherit_crm_customization" model="ir.ui.view">
+        <field name="name">res.partner.search.inherit.crm.customization</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+
+            <!-- Move email field before name field -->
+            <xpath expr="//search[1]/field[@name='name']" position="before">
+                <xpath expr="//field[@name='phone_mobile_search']" position="move"/>
+            </xpath>
+
+            <!-- Remove filter_domain from email field -->
+            <xpath expr="//field[@name='phone_mobile_search']" position="attributes">
+                <attribute name="filter_domain"/>
+            </xpath>
+
+            <xpath expr="//field [@name='parent_id'] " position="after">
+                <field name="type" filter_domain="[('type', 'ilike', self)]"/>
+                <field name="company_name" filter_domain="[('company_name', 'ilike', self)]"/>
+                <field name="area_id" filter_domain="[('area_id', 'ilike', self)]"/>
+
+            </xpath>
+
+        </field>
+    </record>
+    <record id="view_res_partner_kanban_inherit" model="ir.ui.view">
+        <field name="name">view.res.partner.kanban.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.res_partner_kanban_view"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='email']" position="after">
+                <field name="phone" display="full" widget="phone"/>
+            </xpath>
+
+        </field>
+    </record>
+
+
+<!--    <record id="action_open_customer_form" model="ir.actions.act_window">-->
+<!--        <field name="name">Open Existing Customer</field>-->
+<!--        <field name="res_model">res.partner</field>-->
+<!--        <field name="view_mode">form</field>-->
+<!--        <field name="target">current</field>-->
+<!--    </record>-->
+
+
+
+</odoo>

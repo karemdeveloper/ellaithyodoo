@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="assets_backend" inherit_id="web.assets_backend" name="CRM SLA Timer Assets">
+        <xpath expr="." position="inside">
+            <script type="module" src="/crm_customization/static/src/js/sla_ticker.js"/>
+            <template id="sla_ticker_template" src="/crm_customization/static/src/xml/sla_ticker_template.xml"/>
+        </xpath>
+    </template>
+</odoo>

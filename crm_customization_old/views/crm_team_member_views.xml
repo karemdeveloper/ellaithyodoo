@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Inherit CRM team Member Form -->
+    <record id="view_crm_team_member_form_inherit_branch" model="ir.ui.view">
+        <field name="name">crm.team.member.form.inherit</field>
+        <field name="model">crm.team.member</field>
+        <field name="inherit_id" ref="sales_team.crm_team_member_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='crm_team_id']" position="after">
+                <field name="shift" widget="many2many_tags" invisible="1"/>
+                <field name="can_edit_state_directly" invisible="1"/>
+                <field name="state" widget="radio" options="{'horizontal': true}"
+                       readonly="not can_edit_state_directly"/>
+                <field name="team_leader" invisible="1"/>
+                <field name="date_to" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit CRM team Member Tree View -->
+    <record id="view_crm_team_member_tree_inherit_branch" model="ir.ui.view">
+        <field name="name">crm.team.member.tree.inherit</field>
+        <field name="model">crm.team.member</field>
+        <field name="inherit_id" ref="sales_team.crm_team_member_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='crm_team_id']" position="after">
+                <field name="state" widget="badge" decoration-success="state == 'active'" decoration-danger="state == 'inactive'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

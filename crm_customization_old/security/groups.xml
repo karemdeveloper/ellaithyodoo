@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_crm_user_create" model="res.groups">
+        <field name="name">CRM User: Create</field>
+    </record>
+
+    <record id="group_crm_user_delete" model="res.groups">
+        <field name="name">CRM User: Delete</field>
+    </record>
+    <!-- CRM Customer Group -->
+    <record id="group_crm_customer" model="res.groups">
+        <field name="name">CRM Customer</field>
+    </record>
+    <record id="group_crm_customer_sales_person" model="res.groups">
+        <field name="name">customer salesperson</field>
+    </record>
+    <!-- Sales Customer Group -->
+    <record id="group_sales_customer" model="res.groups">
+        <field name="name">Sales Customer</field>
+    </record>
+    <record id="group_crm_opportunity_stage" model="res.groups">
+        <field name="name">CRM Opportunity Stage</field>
+    </record>
+
+    <record id="group_confirmation_inactive_requests" model="res.groups">
+        <field name="name">Confirmation In Active Requests</field>
+    </record>
+    <record id="group_view_inactive_requests" model="res.groups">
+        <field name="name">View InActive Requests</field>
+    </record>
+    <record id="group_view_all_inactive_requests" model="res.groups">
+        <field name="name">View All InActive Requests</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="comment">Users with this group can see all inactive requests from all branches
+            and teams.
+        </field>
+    </record>
+
+    <!-- Team Leader Group - Define early so it can be referenced -->
+    <record id="group_sale_team_leader" model="res.groups">
+        <field name="name">User: Team Leader</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+        <field name="comment">
+            The user can access all records related to their own sales team (team leader access).
+        </field>
+    </record>
+    <!-- Access Create Opportunity group-->
+    <record id="group_access_create_opportunity" model="res.groups">
+        <field name="name">Access Create Opportunity</field>
+        <field name="comment">
+            Users with this group can create opportunity anytime without restriction.
+        </field>
+    </record>
+
+    <record id="inactive_request_rule_user_own" model="ir.rule">
+        <field name="name">Inactive Request - User Own Records</field>
+        <field name="model_id" ref="model_inactive_request"/>
+        <field name="domain_force">[('create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="inactive_request_rule_view_all" model="ir.rule">
+        <field name="name">Inactive Request - View All (Branch Restricted)</field>
+        <field name="model_id" ref="model_inactive_request"/>
+        <field name="domain_force">['|', '|', ('create_uid', '=', user.id), ('team_leader', '=',
+            user.id), '&amp;', ('create_uid.branch_id', '!=', False), ('create_uid.branch_id', '=',
+            user.branch_id.id)]
+        </field>
+        <field name="groups" eval="[(4, ref('crm_customization.group_view_inactive_requests'))]"/>
+    </record>
+    <record id="inactive_request_rule_view_all_no_restrictions" model="ir.rule">
+        <field name="name">Inactive Request - View All (No Restrictions)</field>
+        <field name="model_id" ref="model_inactive_request"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_view_all_inactive_requests'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+    <record id="inactive_request_rule_team_leader" model="ir.rule">
+        <field name="name">Inactive Request - Team Leader Records</field>
+        <field name="model_id" ref="model_inactive_request"/>
+        <field name="domain_force">['|', ('create_uid', '=', user.id), ('team_leader', '=',
+            user.id)]
+        </field>
+        <field name="groups" eval="[(4, ref('group_sale_team_leader'))]"/>
+    </record>
+
+
+    <!-- Direct Inactive Members Group -->
+    <record id="group_direct_inactive_members" model="res.groups">
+        <field name="name">User: Direct Inactive Members</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="comment">
+            The user can make team members inactive directly without requiring an inactive request.
+        </field>
+    </record>
+
+    <!-- Branch Manager Group -->
+    <record id="group_branch_manager" model="res.groups">
+        <field name="name">User: Branch Manager</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="implied_ids" eval="[(4, ref('group_sale_team_leader'))]"/>
+        <field name="comment">
+            The user can access all records in their branch (branch manager access).
+        </field>
+    </record>
+
+    <!-- Custom rule for "All Documents" group to respect branch restrictions -->
+    <record id="crm_lead_rule_all_documents_branch" model="ir.rule">
+        <field name="name">Leads: All Documents (Branch Restricted)</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
+        <field name="domain_force">['|', '|', '|', '|', ('user_id', '=', user.id),
+            ('team_id.user_id', '=', user.id), '&amp;', '&amp;', ('user_id', '!=', False),
+            ('user_id.branch_id', '!=', False), ('user_id.branch_id', '=', user.branch_id.id),
+            '&amp;', '&amp;', ('branch_name', '!=', False), ('user_id.branch_id', '!=', False),
+            ('branch_name', '=', user.branch_id.id), '&amp;', '&amp;', ('team_id.branch_name', '!=',
+            False), ('user_id.branch_id', '!=', False), ('team_id.branch_name', '=',
+            user.branch_id.id)]
+        </field>
+    </record>
+
+    <!-- Custom rule for "All Contacts" to respect branch restrictions -->
+    <record id="partner_rule_all_documents_branch" model="ir.rule">
+        <field name="name">Contacts: All Contacts (Branch Restricted)</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
+        <field name="domain_force">['|', '|', '|', ('user_id', '=', user.id),
+            ('user_id.sale_team_id.user_id', '=', user.id), '&amp;', '&amp;', ('user_id', '!=',
+            False), ('user_id.branch_id', '!=', False), ('user_id.branch_id', '=',
+            user.branch_id.id), '&amp;', '&amp;', ('branch_id', '!=', False), ('user_id.branch_id',
+            '!=', False), ('branch_id', '=', user.branch_id.id)]
+        </field>
+    </record>
+
+    <record id="crm_lead_team_leader_rule" model="ir.rule">
+        <field name="name">Leads: Only show my team's leads</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="groups" eval="[(4, ref('group_sale_team_leader'))]"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), ('team_id.user_id', '=',
+            user.id)]
+        </field>
+    </record>
+
+    <!-- Partner/Contact Rule for Team Leader -->
+    <record id="partner_team_leader_rule" model="ir.rule">
+        <field name="name">Partner: Only show my team's contacts</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="groups" eval="[(4, ref('group_sale_team_leader'))]"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), ('user_id.sale_team_id.user_id',
+            '=', user.id)]
+        </field>
+    </record>
+
+    <!-- Branch Manager Rules -->
+    <!-- Inactive Request Rule: Branch Manager can see requests from their team members -->
+    <record id="inactive_request_rule_branch_manager" model="ir.rule">
+        <field name="name">Inactive Request - Branch Manager Records</field>
+        <field name="model_id" ref="model_inactive_request"/>
+        <field name="domain_force">['|',
+            ('create_uid', '=', user.id),
+            ('create_uid.sale_team_id.branch_name.branch_manager', '=', user.id)
+            ]
+        </field>
+        <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+    </record>
+
+    <!-- Leads Rule: Branch Manager can see leads from their team members -->
+    <record id="crm_lead_branch_manager_rule" model="ir.rule">
+        <field name="name">Leads: Branch Manager - All branch leads</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        <field name="domain_force">['|',
+            ('user_id', '=', user.id),
+            '&amp;',
+            ('branch_name.branch_manager', '=', user.id),
+            ('branch_name', '!=', False)
+            ]
+        </field>
+    </record>
+
+    <!-- Partner/Contacts Rule: Branch Manager can see contacts from their team members -->
+    <record id="partner_branch_manager_rule" model="ir.rule">
+        <field name="name">Partner: Branch Manager - All branch contacts</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        <field name="domain_force">['|',
+            ('user_id', '=', user.id),
+            ('user_id.sale_team_id.branch_name.branch_manager', '=', user.id)
+            ]
+        </field>
+    </record>
+
+    <!-- View Unassigned Opportunities Group -->
+    <record id="group_view_unassigned_opportunities" model="res.groups">
+        <field name="name">View Unassigned Opportunities</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="comment">Users with this group can view opportunities without a salesperson. Regular users will not
+            see opportunities without a salesperson assigned.
+        </field>
+    </record>
+
+    <!-- Complaint Groups -->
+    <record id="group_complaint_branch_manager" model="res.groups">
+        <field name="name">Complaint Branch Manager</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="comment">Can see all complaints in their branch</field>
+    </record>
+
+    <record id="group_complaint_customer_care_manager" model="res.groups">
+        <field name="name">Complaint Customer Care Manager</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="comment">Can see all complaints</field>
+    </record>
+    <!-- NEW: group that allows editing after complaint is solved / under investigation -->
+    <record id="group_complaint_edit_after_solved" model="res.groups">
+        <field name="name">Can Access Complaint After Solved</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="comment">Users in this group can edit complaint fields even after the complaint is
+            Under Investigation or Solved.
+        </field>
+    </record>
+
+    <!-- Complaint Record Rules -->
+    <!-- Rule 1: Own Complaints -->
+    <record id="complaint_rule_own" model="ir.rule">
+        <field name="name">Complaint: Own Complaints</field>
+        <field name="model_id" ref="model_res_complaint"/>
+        <field name="domain_force">[('assigned_to_ids', 'in', [user.id])]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <!--        <field name="perm_create" eval="True"/>-->
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Rule 2: Branch Manager sees branch complaints -->
+    <record id="complaint_rule_branch_manager" model="ir.rule">
+        <field name="name">Complaint: Branch Manager Complaints</field>
+        <field name="model_id" ref="model_res_complaint"/>
+        <field name="domain_force">[('branch_id.branch_manager', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_complaint_branch_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Rule 3: Customer Care Manager sees all complaints -->
+    <record id="complaint_rule_customer_care_manager" model="ir.rule">
+        <field name="name">Complaint: Customer Care Manager - All Complaints</field>
+        <field name="model_id" ref="model_res_complaint"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_complaint_customer_care_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+
+</odoo>

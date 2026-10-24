@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Lost Opportunity Review List View -->
+    <record id="view_lost_opportunity_review_tree" model="ir.ui.view">
+        <field name="name">lost.opportunity.review.tree</field>
+        <field name="model">lost.opportunity.review</field>
+        <field name="arch" type="xml">
+            <list string="Lost Opportunity Reviews" decoration-muted="state=='done'" decoration-info="state=='in_progress'">
+                <field name="name"/>
+                <field name="review_date"/>
+                <field name="total_lost_count"/>
+                <field name="ten_percent_count" string="10% Target"/>
+                <field name="selected_count" 
+                       decoration-success="selection_status == 'at' or selection_status == 'under'" 
+                       decoration-danger="selection_status == 'over'"
+                       string="✓ Selected"/>
+                <field name="selection_status" column_invisible="1"/>
+                <field name="reviewed_count"/>
+                <field name="state" widget="badge" decoration-success="state=='done'" decoration-warning="state=='in_progress'" decoration-info="state=='draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Lost Opportunity Review Form View -->
+    <record id="view_lost_opportunity_review_form" model="ir.ui.view">
+        <field name="name">lost.opportunity.review.form</field>
+        <field name="model">lost.opportunity.review</field>
+        <field name="arch" type="xml">
+            <form string="Lost Opportunity Review">
+                <header>
+                    <button name="action_load_lost_opportunities" string="Load Lost Opportunities" type="object" 
+                            class="oe_highlight" invisible="state == 'done'"/>
+                    <button name="action_pick_randomly" string="Pick Randomly (10%)" type="object" 
+                            class="btn-secondary" invisible="state == 'done'"/>
+                    <button name="action_create_feedback" string="Create Feedback" type="object" 
+                            class="btn-primary" invisible="state == 'done'"/>
+                    <button name="action_mark_done" string="Mark as Done" type="object" 
+                            class="oe_highlight" invisible="state == 'done'"/>
+                    <button name="action_reset_to_draft" string="Reset to Draft" type="object" 
+                            invisible="state != 'done'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_feedbacks" type="object" class="oe_stat_button" icon="fa-comments">
+                            <field name="feedback_count" widget="statinfo" string="Feedbacks"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="review_date"/>
+                        </group>
+                        <group>
+                            <field name="total_lost_count"/>
+                            <field name="ten_percent_count" string="10% Target"/>
+                            <field name="selected_count" 
+                                   decoration-success="selection_status == 'at' or selection_status == 'under'" 
+                                   decoration-danger="selection_status == 'over'"
+                                   string="✓ Selected (for Feedback)"/>
+                            <field name="selection_status" invisible="1"/>
+                            <!-- <field name="reviewed_count"/> -->
+                            <!-- <field name="review_percentage" widget="percentage"/> -->
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Review Lines">
+                            <field name="line_ids">
+                                <list string="Lost Opportunities" editable="bottom" decoration-success="feedback=='valid'" decoration-danger="feedback=='not_valid'">
+                                    <field name="selected" widget="boolean_toggle"/>
+                                    <field name="lead_id" options="{'no_create': True}" readonly="1"/>
+                                    <field name="lead_name" readonly="1"/>
+                                    <field name="contact_name" readonly="1"/>
+                                    <field name="salesperson_id" readonly="1"/>
+                                    <field name="phone_primary" readonly="1"/>
+                                    <field name="lost_reason_id" readonly="1"/>
+                                    <field name="feedback"/>
+                                    <field name="notes"/>
+                                </list>
+                                <form string="Review Line">
+                                    <group>
+                                        <group>
+                                            <field name="selected"/>
+                                            <field name="lead_id" options="{'no_create': True}" readonly="1"/>
+                                            <field name="lead_name" readonly="1"/>
+                                            <field name="contact_name" readonly="1"/>
+                                            <field name="salesperson_id" readonly="1"/>
+                                        </group>
+                                        <group>
+                                            <field name="phone_primary" readonly="1"/>
+                                            <field name="lead_stage" readonly="1"/>
+                                            <field name="lost_reason_id" readonly="1"/>
+                                            <field name="feedback"/>
+                                        </group>
+                                    </group>
+                                    <group>
+                                        <field name="notes" placeholder="Add review notes here..."/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                    <chatter/>
+                </sheet>
+            </form>
+        </field>    
+    </record>
+
+    <!-- Lost Opportunity Review Search View -->
+    <record id="view_lost_opportunity_review_search" model="ir.ui.view">
+        <field name="name">lost.opportunity.review.search</field>
+        <field name="model">lost.opportunity.review</field>
+        <field name="arch" type="xml">
+            <search string="Search Lost Opportunity Reviews">
+                <field name="name"/>
+                <field name="review_date"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="In Progress" name="in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Done" name="done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter string="Today" name="today" domain="[('review_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="This Week" name="this_week" 
+                        domain="[('review_date', '&gt;=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d')),
+                                 ('review_date', '&lt;=', (context_today() + datetime.timedelta(days=6-context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Month" name="this_month" 
+                        domain="[('review_date', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Review Date" name="group_by_date" context="{'group_by': 'review_date'}"/>
+                    <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Lost Opportunity Review Line List View -->
+    <record id="view_lost_opportunity_review_line_tree" model="ir.ui.view">
+        <field name="name">lost.opportunity.review.line.tree</field>
+        <field name="model">lost.opportunity.review.line</field>
+        <field name="arch" type="xml">
+            <list string="Review Lines" decoration-success="feedback=='valid'" decoration-danger="feedback=='not_valid'">
+                <field name="review_id"/>
+                <field name="lead_name"/>
+                <field name="contact_name"/>
+                <field name="salesperson_id"/>
+                <field name="phone_primary"/>
+                <field name="lost_reason_id"/>
+                <field name="feedback"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Lost Opportunity Review Line Form View -->
+    <record id="view_lost_opportunity_review_line_form" model="ir.ui.view">
+        <field name="name">lost.opportunity.review.line.form</field>
+        <field name="model">lost.opportunity.review.line</field>
+        <field name="arch" type="xml">
+            <form string="Review Line">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="review_id"/>
+                            <field name="lead_id" options="{'no_create': True}"/>
+                            <field name="lead_name"/>
+                            <field name="contact_name"/>
+                            <field name="salesperson_id"/>
+                        </group>
+                        <group>
+                            <field name="phone_primary"/>
+                            <field name="lead_stage"/>
+                            <field name="lost_reason_id"/>
+                            <field name="feedback" required="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes" placeholder="Add review notes here..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Lost Opportunity Review Line Search View -->
+    <record id="view_lost_opportunity_review_line_search" model="ir.ui.view">
+        <field name="name">lost.opportunity.review.line.search</field>
+        <field name="model">lost.opportunity.review.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Review Lines">
+                <field name="lead_id"/>
+                <field name="contact_name"/>
+                <field name="salesperson_id"/>
+                <field name="phone_primary"/>
+                <separator/>
+                <filter string="Valid" name="valid" domain="[('feedback', '=', 'valid')]"/>
+                <filter string="Not Valid" name="not_valid" domain="[('feedback', '=', 'not_valid')]"/>
+                <filter string="No Feedback" name="no_feedback" domain="[('feedback', '=', False)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Review" name="group_by_review" context="{'group_by': 'review_id'}"/>
+                    <filter string="Salesperson" name="group_by_salesperson" context="{'group_by': 'salesperson_id'}"/>
+                    <filter string="Feedback" name="group_by_feedback" context="{'group_by': 'feedback'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Actions -->
+    <record id="action_lost_opportunity_review" model="ir.actions.act_window">
+        <field name="name">Lost Opportunity Reviews</field>
+        <field name="res_model">lost.opportunity.review</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Lost Opportunity Review
+            </p>
+            <p>
+                Review and validate lost opportunities to ensure quality control and identify improvement areas.
+            </p>
+        </field>
+    </record>
+
+
+    <!-- Menu Items -->
+    <menuitem id="menu_lost_opportunity_review_root"
+              name="Lost Opportunity Review"
+              parent="crm.crm_menu_root"
+              sequence="50"/>
+
+    <menuitem id="menu_lost_opportunity_review"
+              name="Reviews"
+              parent="menu_lost_opportunity_review_root"
+              action="action_lost_opportunity_review"
+              sequence="10"/>
+
+</odoo>

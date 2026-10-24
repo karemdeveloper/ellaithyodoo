@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Missing Items Inquiry Complaint Email Template (Arabic) -->
+    <record id="email_template_complaint_missing_items_inquiry"
+            model="mail.template">
+        <field name="name">Complaint: Missing Items Inquiry (Arabic)</field>
+        <field name="model_id"
+               ref="model_res_complaint"/>
+        <field name="subject">{{ object.name }} , افادة في نواقص</field>
+        <field name="email_from">{{(object.create_uid.email_formatted or user.email_formatted) or ''}}</field>
+        <field name="body_html"
+               type="html">
+            <div style="margin: 0px; padding: 0px; direction: rtl; text-align: right; font-family: Arial, sans-serif;">
+                <t t-if="object.complaint_state == 'solved'">
+                    <p style="color: green; font-weight: bold;">
+                        ✅ تم حل الشكوى
+                    </p>
+                </t>
+                <p style="font-size: 14px; margin-bottom: 10px;">
+                    <strong>رقم الشكوى:</strong>
+                    <t t-esc="object.name"/>
+                </p>
+                <p style="margin: 0px; padding: 0px; font-size: 14px;">
+                    السادة ادارة الحركة
+                    <br/>
+                    <br/>
+                    تحية طيبة وبعد ,,,
+                    <br/>
+                    <br/>
+                </p>
+
+                <p style="margin: 10px 0px; padding: 0px; font-size: 14px; line-height: 1.8;">
+                    وردنا اتصال من العميل لاحق الذكر يستسفر عن النواقص الخاصة به حيث مثبت لدينا علي شيت النواقص وعلي ال
+                    AX ان السيارة كاملة بدون نواقص
+                    <br/>
+                    <br/>
+                    <strong style="color: #1976d2;">فبرجاء المراجعة وافادتنا بموقف نواقص العميل.</strong>
+                </p>
+
+                <div style="background-color: #fff3e0; padding: 15px; border-right: 3px solid #ff9800; margin: 15px 0; border-radius: 4px;">
+                    <p style="margin: 0 0 10px 0; font-size: 14px; color: #e65100; font-weight: bold;">
+                        📋 الإجراءات المطلوبة:
+                    </p>
+                    <ul style="margin: 5px 0; padding-right: 20px; font-size: 13px; color: #d84315;">
+                        <li style="margin: 5px 0;">مراجعة شيت النواقص والـ AX</li>
+                        <li style="margin: 5px 0;">التحقق من حالة السيارة الفعلية</li>
+                        <li style="margin: 5px 0;">توضيح موقف النواقص (موجودة/غير موجودة)</li>
+                        <li style="margin: 5px 0;">إفادتنا بالموقف الصحيح</li>
+                        <li style="margin: 5px 0;">تحديث السجلات إذا لزم الأمر</li>
+                    </ul>
+                </div>
+
+                <div style="background-color: #fff8e1; padding: 12px; border-right: 3px solid #ffc107; margin: 15px 0; border-radius: 4px;">
+                    <p style="margin: 0; font-size: 13px; color: #f57c00;">
+                        <strong>⚠️ تعارض في البيانات:</strong>
+                        العميل يستفسر عن نواقص بينما السجلات تشير إلى عدم وجود نواقص
+                    </p>
+                </div>
+
+                <p style="margin: 20px 0px 10px 0px; padding: 0px; font-size: 14px; font-weight: bold; color: #2196f3;">
+                    ℹ️ يرجى مراجعة البيانات وإفادتنا بالموقف الصحيح
+                </p>
+
+                <div style="margin: 20px 0px; text-align: center;">
+                    <a href="/web#id={{object.id}}&amp;model=res.complaint&amp;view_type=form"
+                       style="padding: 10px 20px; font-size: 14px; color: #FFFFFF; background-color: #2196f3; border: none; border-radius: 4px; text-decoration: none; display: inline-block; font-weight: bold;">
+                        عرض تفاصيل الشكوى
+                    </a>
+                </div>
+
+                <p style="margin: 20px 0px 0px 0px; padding: 0px; font-size: 13px; color: #666;">
+                    مع خالص التحية والتقدير،
+                    <br/>
+                    <t t-esc="object.create_uid.name or 'نظام إدارة الشكاوى'"/>
+                </p>
+
+                <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;"/>
+
+                <p style="margin: 0px; padding: 0px; font-size: 11px; color: #999; text-align: center;">
+                    هذه رسالة تلقائية من نظام إدارة الشكاوى - يرجى عدم الرد على هذا البريد مباشرة
+                </p>
+            </div>
+        </field>
+        <field name="auto_delete"
+               eval="False"/>
+    </record>
+</odoo>

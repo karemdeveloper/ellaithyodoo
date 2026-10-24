@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Lost Opportunity Feedback List View -->
+    <record id="view_lost_opportunity_feedback_tree" model="ir.ui.view">
+        <field name="name">lost.opportunity.feedback.tree</field>
+        <field name="model">lost.opportunity.feedback</field>
+        <field name="arch" type="xml">
+            <list string="Lost Opportunity Feedback" decoration-success="feedback=='valid'" decoration-danger="feedback=='not_valid'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="lead_name"/>
+                <field name="salesperson_id"/>
+                <field name="phone_primary"/>
+                <field name="feedback"/>
+                <field name="state" widget="badge" decoration-success="state=='confirmed'" decoration-info="state=='draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Lost Opportunity Feedback Form View -->
+    <record id="view_lost_opportunity_feedback_form" model="ir.ui.view">
+        <field name="name">lost.opportunity.feedback.form</field>
+        <field name="model">lost.opportunity.feedback</field>
+        <field name="arch" type="xml">
+            <form string="Lost Opportunity Feedback">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object" 
+                            class="oe_highlight" invisible="state == 'confirmed'"/>
+                    <button name="action_reset_to_draft" string="Reset to Draft" type="object" 
+                            invisible="state != 'confirmed'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date"/>
+                            <field name="review_id" readonly="1"/>
+                            <field name="lead_id" options="{'no_create': True}"/>
+                            <field name="partner_id"/>
+                            <field name="lead_name"/>
+                        </group>
+                        <group>
+                            <field name="salesperson_id"/>
+                            <field name="phone_primary"/>
+                            <field name="lost_reason_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="feedback" widget="radio"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" 
+                               invisible="feedback == 'valid'" 
+                               required="feedback == 'not_valid'"
+                               placeholder="Please describe why this feedback is not valid..."/>
+                    </group>
+                    <chatter/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Lost Opportunity Feedback Search View -->
+    <record id="view_lost_opportunity_feedback_search" model="ir.ui.view">
+        <field name="name">lost.opportunity.feedback.search</field>
+        <field name="model">lost.opportunity.feedback</field>
+        <field name="arch" type="xml">
+            <search string="Search Lost Opportunity Feedback">
+                <field name="name"/>
+                <field name="lead_id"/>
+                <field name="salesperson_id"/>
+                <field name="date"/>
+                <separator/>
+                <filter string="Valid" name="valid" domain="[('feedback', '=', 'valid')]"/>
+                <filter string="Not Valid" name="not_valid" domain="[('feedback', '=', 'not_valid')]"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <separator/>
+                <filter string="Today" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="This Week" name="this_week" 
+                        domain="[('date', '&gt;=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d')),
+                                 ('date', '&lt;=', (context_today() + datetime.timedelta(days=6-context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Month" name="this_month" 
+                        domain="[('date', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Salesperson" name="group_by_salesperson" context="{'group_by': 'salesperson_id'}"/>
+                    <filter string="Feedback" name="group_by_feedback" context="{'group_by': 'feedback'}"/>
+                    <filter string="Date" name="group_by_date" context="{'group_by': 'date'}"/>
+                    <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_lost_opportunity_feedback" model="ir.actions.act_window">
+        <field name="name">Lost Opportunity Feedback</field>
+        <field name="res_model">lost.opportunity.feedback</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Feedback Records Yet
+            </p>
+            <p>
+                Feedback records are created from Lost Opportunity Reviews.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_lost_opportunity_feedback"
+              name="Feedback"
+              parent="menu_lost_opportunity_review_root"
+              action="action_lost_opportunity_feedback"
+              sequence="30"/>
+
+</odoo>

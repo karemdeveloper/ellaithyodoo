@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="crm_penalty_pdf_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2 style="text-align:center;">Penalty Report</h2>
+
+                    <p>
+                        <strong>Branch:</strong>
+                        <t t-esc="branch_name"/>
+
+                    </p>
+                    <p>
+                        <strong>Date From:</strong>
+                        <t t-esc="date_from"/>
+                    </p>
+                    <p>
+                        <strong>Date To:</strong>
+                        <t t-esc="date_to"/>
+                    </p>
+
+                    <table class="table table-sm table-bordered" style="margin-top:15px;">
+                        <thead>
+                            <tr>
+                                <th>Sales Person</th>
+                                <th>1Day</th>
+                                <th>2Days</th>
+                                <th>3Days</th>
+                                <th>4Days</th>
+                                <th>5Days</th>
+                                <th>6Days</th>
+                                <th>7Days</th>
+                                <th>8Days</th>
+                                <th>9Days</th>
+                                <th>Late</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="docs" t-as="line">
+                                <tr>
+                                    <td>
+                                        <t t-esc="line['salesperson']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['1']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['2']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['3']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['4']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['5']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['6']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['7']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['8']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['9']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['late']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['total']"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+
+    <record id="action_crm_penalty_pdf_report" model="ir.actions.report">
+        <field name="name">Penalty Report</field>
+        <field name="model">crm.penalty.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">crm_customization.crm_penalty_pdf_template</field>
+        <field name="report_file">crm_customization.crm_penalty_pdf_template</field>
+        <field name="binding_model_id" ref="model_crm_penalty_wizard"/>
+        <field name="binding_type">report</field>
+    </record>
+
+
+</odoo>

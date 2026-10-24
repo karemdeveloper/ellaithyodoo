@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- =================== COMPLAINT TYPE =================== -->
+    <record id="view_res_complaint_type_list" model="ir.ui.view">
+        <field name="name">res.complaint.type.list</field>
+        <field name="model">res.complaint.type</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="sla_duration"/>
+                <field name="email_template_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_res_complaint_type_form" model="ir.ui.view">
+        <field name="name">res.complaint.type</field>
+        <field name="model">res.complaint.type</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="department_id"/>
+                        <field name="sla_duration" placeholder="e.g., 5 (days)"/>
+                        <field name="email_template_id"/>
+                    </group>
+                </sheet>
+                 <!-- Attachment preview -->
+                    <div class="o_attachment_preview" />
+                    <!-- Chatter -->
+                    <chatter reload_on_attachment="True"/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_res_complaint_type" model="ir.actions.act_window">
+        <field name="name">Complaint Type</field>
+        <field name="res_model">res.complaint.type</field>
+        <field name="view_mode">list,form</field>
+    </record>
+     <menuitem id="menu_res_complaint_type"
+              name="Complaint Type"
+              parent="crm.crm_menu_config"
+              action="action_res_complaint_type"
+              sequence="2"/>
+
+
+</odoo>

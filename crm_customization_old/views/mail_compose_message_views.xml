@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Inherit CRM Opportunity Form -->
+    <record id="view_mail_compose_message_form_inherit" model="ir.ui.view">
+        <field name="name">view.mail.compose.message.form.inherit</field>
+        <field name="model">mail.compose.message</field>
+        <field name="inherit_id" ref="mail.email_compose_message_wizard_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='subject']" position="before">
+                <field name="recipient_partners" widget="many2many_tags"/>
+            </xpath>
+             <xpath expr="//field[@name='subject']" position="after">
+            <field name="cc_partners" widget="many2many_tags"/>
+            <field name="cc_email" readonly="0" invisible="1"/>
+        </xpath>
+        </field>
+    </record>
+
+
+
+</odoo>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_crm_feedback_wizard_form" model="ir.ui.view">
+        <field name="name">crm.feedback.wizard.form</field>
+        <field name="model">crm.feedback.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Add Feedback">
+                <group>
+                    <!-- Hidden fields for computation -->
+                    <field name="lead_ids" invisible="1"/>
+                    <field name="show_next_stage" invisible="1"/>
+                    
+<!--                    <field name="date"/>-->
+<!--                    <field name="salesperson_id"/>-->
+                    <field name="feedback2" required="1"/>
+                    
+                    <!-- Next Stage field - only visible when opportunities are in New stage -->
+                    <field name="next_stage_id" 
+                           invisible="show_next_stage == False"
+                           required="feedback2 =='answered'"
+                           options="{'no_create': True, 'no_create_edit': True}"/>
+                </group>
+                <footer>
+                    <button string="Add Feedback" type="object" name="action_add_feedback" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the wizard -->
+    <record id="action_crm_feedback_wizard" model="ir.actions.act_window">
+        <field name="name">Add Feedback</field>
+        <field name="res_model">crm.feedback.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

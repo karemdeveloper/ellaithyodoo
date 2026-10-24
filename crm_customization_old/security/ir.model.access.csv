@@ -1,0 +1,62 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_res_area_user,res.area user,model_res_area,base.group_user,1,0,0,0
+access_res_area_admin,res.area admin,model_res_area,base.group_system,1,1,1,1
+access_res_branch_user,res.branch user,model_res_branch,base.group_user,1,0,0,0
+access_res_branch_admin,res.branch admin,model_res_branch,base.group_system,1,1,1,1
+access_res_brand_user,res.brand user,model_res_brand,base.group_user,1,0,0,0
+access_res_brand_admin,res.brand admin,model_res_brand,base.group_system,1,1,1,1
+access_res_sub_brand_user,res.sub.brand user,model_res_sub_brand,base.group_user,1,0,0,0
+access_res_sub_brand_admin,res.sub.brand admin,model_res_sub_brand,base.group_system,1,1,1,1
+access_res_source_user,res.source user,model_res_source,base.group_user,1,0,0,0
+access_res_source_admin,res.source admin,model_res_source,base.group_system,1,1,1,1
+access_res_day,res.day,model_res_day,,1,0,0,0
+access_res_shift,res.shift,model_res_shift,,1,0,0,0
+access_res_question,res.question,model_res_question,,1,0,0,0
+access_res_answer,res.answer,model_res_answer,,1,0,0,0
+access_res_department_user,res.department user,model_res_department,base.group_user,1,0,0,0
+access_res_department_admin,res.department admin,model_res_department,base.group_system,1,1,1,1
+access_res_complaint,res.complaint,model_res_complaint,crm_customization.group_complaint_customer_care_manager,1,1,1,1
+access_res_complaint_user,res.complaint.user,model_res_complaint,base.group_user,1,0,0,0
+access_complaint_category,complaint.category,model_complaint_category,,1,1,1,1
+access_complaint_user,complaint.user,model_complaint_user,,1,1,1,1
+
+
+access_res_complaint_reason_user,res.complaint.reason user,model_res_complaint_reason,base.group_user,1,0,0,0
+access_res_complaint_reason_admin,res.complaint.reason admin,model_res_complaint_reason,base.group_system,1,1,1,1
+access_res_complaint_type_user,res.complaint.type user,model_res_complaint_type,base.group_user,1,0,0,0
+access_res_complaint_type_admin,res.complaint.type admin,model_res_complaint_type,base.group_system,1,1,1,1
+access_res_escalation_user,res.escalation user,model_res_escalation,base.group_user,1,0,0,0
+access_res_escalation_admin,res.escalation admin,model_res_escalation,base.group_system,1,1,1,1
+access_res_survey,res.survey,model_res_survey,,1,1,1,1
+access_marketing_offers_user,marketing.offers user,model_marketing_offers,base.group_user,1,0,0,0
+access_marketing_offers_admin,marketing.offers admin,model_marketing_offers,base.group_system,1,1,1,1
+access_call_type_user,call.type user,model_call_type,base.group_user,1,0,0,0
+access_call_type_admin,call.type admin,model_call_type,base.group_system,1,1,1,1
+access_inactive_reason_user,inactive.reason user,model_inactive_reason,base.group_user,1,0,0,0
+access_inactive_reason_admin,inactive.reason admin,model_inactive_reason,base.group_system,1,1,1,1
+access_distribute_sequence,distribute.sequence,model_distribute_sequence,,1,1,1,1
+access_crm_feedback,crm.feedback,model_crm_feedback,,1,1,1,1
+access_crm_note,crm.note,model_crm_note,,1,1,1,1
+access_crm_note_wizard,crm.note.wizard,model_crm_note_wizard,,1,1,1,1
+
+
+access_inactive_request,inactive.request,model_inactive_request,,1,1,1,1
+access_res_company_custom,res.company.custom,model_res_company_custom,,1,1,1,1
+access_opportunity_wizard,opportunity.wizard,model_opportunity_wizard,,1,1,1,1
+access_crm_feedback_wizard,crm.feedback.wizard,model_crm_feedback_wizard,,1,1,1,1
+access_res_complaint_wizard,res.complaint.wizard,model_res_complaint_wizard,,1,1,1,1
+access_crm_penalty_wizard,crm.penalty.wizard,model_crm_penalty_wizard,,1,1,1,1
+access_lost_opportunity_review,lost.opportunity.review,model_lost_opportunity_review,,1,1,1,1
+access_lost_opportunity_review_line,lost.opportunity.review.line,model_lost_opportunity_review_line,,1,1,1,1
+access_lost_review_feedback_wizard,lost.review.feedback.wizard,model_lost_review_feedback_wizard,,1,1,1,1
+access_lost_review_feedback_wizard_line,lost.review.feedback.wizard.line,model_lost_review_feedback_wizard_line,,1,1,1,1
+access_lost_opportunity_feedback,lost.opportunity.feedback,model_lost_opportunity_feedback,,1,1,1,1
+access_res_service,res.service,model_res_service,,1,1,1,1
+access_opportunity_won_wizard,opportunity.won.wizard,model_opportunity_won_wizard,,1,1,1,1
+
+access_crm_lead_delete,opportunity.crm.lead.delte,crm.model_crm_lead,crm_customization.group_crm_user_delete,1,1,1,1
+access_crm_review_opportunity,crm.review.opportunity,model_crm_review_opportunity,,1,1,1,1
+access_crm_review_opportunity_line,crm.review.opportunity.line,model_crm_review_opportunity_line,,1,1,1,1
+
+
+

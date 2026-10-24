@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+   <t t-name="crm_customization.SlaTickerTemplate" owl="1">
+    <span t-esc="formattedTime" class="badge badge-info"/>
+</t>
+
+</templates>

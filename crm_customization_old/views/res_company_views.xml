@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- =================== COMPANY =================== -->
+    <record id="view_res_company_list" model="ir.ui.view">
+        <field name="name">res.company.list</field>
+        <field name="model">res.company.custom</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="company_name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_res_company_form" model="ir.ui.view">
+        <field name="name">res.company.form</field>
+        <field name="model">res.company.custom</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="company_name"/>
+                    </group>
+                </sheet>
+                 <!-- Attachment preview -->
+                    <div class="o_attachment_preview" />
+                    <!-- Chatter -->
+                    <chatter reload_on_attachment="True"/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_res_company" model="ir.actions.act_window">
+        <field name="name">Companies</field>
+        <field name="res_model">res.company.custom</field>
+        <field name="view_mode">list,form</field>
+    </record>
+     <menuitem id="menu_res_company"
+              name="Companies"
+              parent="crm.crm_menu_config"
+              action="action_res_company"
+              sequence="3"/>
+</odoo>

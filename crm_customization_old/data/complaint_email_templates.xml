@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Default Complaint Email Template -->
+    <record id="email_template_complaint_default"
+            model="mail.template">
+        <field name="name">Complaint: Default Notification</field>
+        <field name="model_id"
+               ref="model_res_complaint"/>
+        <field name="subject">New Complaint Assignment - {{object.name or ''}}</field>
+        <field name="email_from">{{(object.create_uid.email_formatted or user.email_formatted) or ''}}</field>
+        <field name="body_html"
+               type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <t t-if="object.complaint_state == 'solved'">
+                    <p style="color: green; font-weight: bold;">
+                        ✅ تم حل الشكوى
+                    </p>
+                </t>
+                <p style="font-size: 14px; margin-bottom: 10px;">
+                    <strong>رقم الشكوى:</strong>
+                    <t t-esc="object.name"/>
+                </p>
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Dear Team,
+                    <br/>
+                    <br/>
+                    A new complaint has been assigned to your department. Please review the details below:
+                    <br/>
+                    <br/>
+                </p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Complaint Reference:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.name or ''"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Customer:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.customer_id.name or ''"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Phone:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.primary_phone or  'N/A'"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Salesperson:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.salesperson_id.name  or  'N/A'"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Complaint Type:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.complaint_type_id.name  or  'N/A'"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Reason:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.complaint_reason_id.name  or  'N/A'"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Department:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.department.name  or  'N/A'"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Branch:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.branch_id.branch_name  or  'N/A'"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Date:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.date  or  'N/A'"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            SLA Duration:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.sla_duration  or  'N/A'"/>
+                            days
+                        </td>
+                    </tr>
+                </table>
+
+                <p style="margin-top: 20px; padding: 0px; font-size: 13px;">
+                    Please address this complaint within the SLA timeframe.
+                    <br/>
+                    <br/>
+                    You can view and manage the complaint by clicking the button below:
+                </p>
+
+                <div style="margin: 16px 0px 16px 0px;">
+                    <a href="/web#id={{object.id}}&amp;model=res.complaint&amp;view_type=form"
+                       style="padding: 8px 16px; font-size: 12px; line-height: 18px; color: #FFFFFF; border-color:#875A7B; text-decoration: none; display: inline-block; margin-bottom: 0px; font-weight: 400; text-align: center; vertical-align: middle; cursor: pointer; white-space: nowrap; background-image: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius:3px">
+                        View Complaint
+                    </a>
+                </div>
+
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Best regards,
+                    <br/>
+                    <t t-esc="object.create_uid.name or 'Complaint Management System'"/>
+                </p>
+            </div>
+        </field>
+        <field name="auto_delete"
+               eval="False"/>
+        <field name="lang">{{object.customer_id.lang or ''}}</field>
+    </record>
+
+    <!-- Additional templates can be created here for specific complaint types -->
+    <record id="email_template_complaint_technical"
+            model="mail.template">
+        <field name="name">Complaint: Technical Issue</field>
+        <field name="model_id"
+               ref="model_res_complaint"/>
+        <field name="subject">Technical Complaint - {{object.name or ''}}</field>
+        <field name="email_from">{{(object.create_uid.email_formatted or user.email_formatted) or ''}}</field>
+        <field name="body_html"
+               type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <strong>TECHNICAL SUPPORT REQUIRED</strong>
+                    <br/>
+                    <br/>
+                    A technical complaint has been logged and requires your immediate attention.
+                    <br/>
+                    <br/>
+                </p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #ffebee; font-weight: bold;">
+                            Complaint Reference:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <t t-esc="object.name or ''"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Customer:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">{{object.customer_id.name or 'N/A'}}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Contact Phone:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">{{object.primary_phone or 'N/A'}}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Issue Type:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">{{object.complaint_reason_id.name or 'N/A'}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #fff3e0; font-weight: bold;">
+                            ⏰ SLA Duration:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">
+                            <strong>{{object.sla_duration or 'N/A'}} days</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #ddd; background-color: #f2f2f2; font-weight: bold;">
+                            Department:
+                        </td>
+                        <td style="padding: 5px; border: 1px solid #ddd;">{{object.department.name or 'N/A'}}</td>
+                    </tr>
+                </table>
+
+                <div style="margin: 16px 0px 16px 0px;">
+                    <a href="/web#id={{object.id}}&amp;model=res.complaint&amp;view_type=form"
+                       style="padding: 8px 16px; font-size: 12px; line-height: 18px; color: #FFFFFF; border-color:#d32f2f; text-decoration: none; display: inline-block; margin-bottom: 0px; font-weight: 400; text-align: center; vertical-align: middle; cursor: pointer; white-space: nowrap; background-image: none; background-color: #d32f2f; border: 1px solid #d32f2f; border-radius:3px">
+                        🔧 Open Technical Complaint
+                    </a>
+                </div>
+
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <em>Please prioritize this technical issue and update the status regularly.</em>
+                </p>
+            </div>
+        </field>
+        <field name="auto_delete"
+               eval="False"/>
+    </record>
+
+    <!-- Customer Service Template -->
+    <record id="email_template_complaint_service"
+            model="mail.template">
+        <field name="name">Complaint: Customer Service</field>
+        <field name="model_id"
+               ref="model_res_complaint"/>
+        <field name="subject">{{ object.name }} , Customer Service Complaint - {{object.name or ''}}</field>
+        <field name="email_from">{{(object.create_uid.email_formatted or user.email_formatted) or ''}}</field>
+        <field name="body_html"
+               type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Hello Team,
+                    <br/>
+                    <br/>
+                    A customer service complaint has been registered. Please handle this with priority.
+                    <br/>
+                    <br/>
+                </p>
+                <div style="background-color: #e3f2fd; padding: 15px; border-left: 4px solid #2196f3; margin: 15px 0;">
+                    <p style="margin: 0; font-weight: bold; color: #1976d2;">تفاصيل الشكوى</p>
+
+                    <p style="margin: 5px 0 0 0; line-height: 1.8;">
+
+                        <strong>Reference:</strong>
+                        <t t-esc="object.name or ''"/>
+                        <br/>
+
+                        <strong>Customer:</strong>
+                        <t t-esc="object.customer_id.name or ''"/>
+                        <br/>
+
+                        <strong>Phone:</strong>
+                        <t t-esc="object.primary_phone or ''"/>
+                        <br/>
+
+                        <strong>Salesperson:</strong>
+                        <t t-esc="object.salesperson_id.name or 'غير محدد'"/>
+                        <br/>
+
+                        <strong>Branch:</strong>
+                        <t t-esc="object.branch_id.branch_name or ''"/>
+                        <br/>
+
+                        <strong>Complaint Reason:</strong>
+                        <t t-esc="object.complaint_reason_id.name or ''"/>
+                        <br/>
+
+                        <strong>Department:</strong>
+                        <t t-esc="object.department.name or ''"/>
+                        <br/>
+
+                        <strong>Date:</strong>
+                        <t t-esc="object.date or ''"/>
+                    </p>
+                </div>
+
+
+                <div style="margin: 16px 0px 16px 0px;">
+                    <a href="/web#id={{object.id}}&amp;model=res.complaint&amp;view_type=form"
+                       style="padding: 8px 16px; font-size: 12px; line-height: 18px; color: #FFFFFF; border-color:#2196f3; text-decoration: none; display: inline-block; margin-bottom: 0px; font-weight: 400; text-align: center; vertical-align: middle; cursor: pointer; white-space: nowrap; background-image: none; background-color: #2196f3; border: 1px solid #2196f3; border-radius:3px">
+                        View Complaint
+                    </a>
+                </div>
+
+                <p style="margin: 0px; padding: 0px; font-size: 12px; color: #666;">
+                    This is an automated notification from the Complaint Management System.
+                </p>
+            </div>
+        </field>
+        <field name="auto_delete"
+               eval="False"/>
+    </record>
+</odoo>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Tip Request Complaint Email Template (Arabic) -->
+    <record id="email_template_complaint_tip"
+            model="mail.template">
+        <field name="name">Complaint: Tip Request (Arabic)</field>
+        <field name="model_id"
+               ref="model_res_complaint"/>
+        <field name="subject">{{ object.name }} ,شكوي مسئول مبيعات – إكراميه</field>
+        <field name="email_from">{{(object.create_uid.email_formatted or user.email_formatted) or ''}}</field>
+        <field name="body_html"
+               type="html">
+            <div style="margin: 0px; padding: 0px; direction: rtl; text-align: right; font-family: Arial, sans-serif;">
+                <t t-if="object.complaint_state == 'solved'">
+                    <p style="color: green; font-weight: bold;">
+                        ✅ تم حل الشكوى
+                    </p>
+                </t>
+                <p style="font-size: 14px; margin-bottom: 10px;">
+                    <strong>رقم الشكوى:</strong>
+                    <t t-esc="object.name"/>
+                </p>
+                <p style="margin: 0px; padding: 0px; font-size: 14px; font-weight: bold;">
+                    السادة ادارة الموارد البشرية
+                    <br/>
+                    <t t-out="object.department.department_manager_id.name or 'Department Manager'"/>
+                    <br/>
+                    <br/>
+                    تحية طيبة وبعد ,,,
+                    <br/>
+                    <br/>
+                </p>
+
+                <p style="margin: 10px 0px; padding: 0px; font-size: 14px; line-height: 1.8;">
+                    وردنا اتصال من العميل لاحق الذكر يشكو بسبب قيام مسئول المبيعات استاذ
+                    <strong style="color: #c62828;">
+                        <t t-esc="object.salesperson_id.name  or  'غير محدد'"/>
+                    </strong>
+                    طلب من العميل اكرامية مما ادي الي استياء العميل من هذا الامر.
+                    <br/>
+                    <br/>
+                    <strong>فبرجاء مراجعة الامر واتخاذ اللازم.</strong>
+                </p>
+
+                <div style="background-color: #ffebee; padding: 15px; border-right: 4px solid #d32f2f; margin: 20px 0; border-radius: 4px; border: 2px solid #ef5350;">
+                    <p style="margin: 0; font-weight: bold; color: #b71c1c; font-size: 16px;">⚠️ شكوى خطيرة - يتطلب
+                        تحقيق فوري
+                    </p>
+                    <table style="width: 100%; margin-top: 10px; font-size: 13px;">
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold; width: 40%;">رقم الشكوى:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-esc="object.name or ''"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">اسم العميل:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-esc="object.customer_id.name or 'غير محدد'"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">رقم الهاتف:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-esc="object.primary_phone or 'غير محدد'"/>
+                            </td>
+                        </tr>
+                        <tr style="background-color: #ffcdd2;">
+                            <td style="padding: 5px; font-weight: bold;">مسؤول المبيعات:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-esc="object.salesperson_id.name or 'غير محدد'"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">الفرع:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-esc="object.branch_id.branch_name or 'غير محدد'"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">القسم:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-esc="object.department.name or 'غير محدد'"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">تاريخ الشكوى:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-if="object.date">
+                                    <t t-esc="format_date(object.date)"/>
+                                </t>
+                                <t t-else="">غير محدد</t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">تاريخ ووقت الإبلاغ:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-if="object.create_date">
+                                    <t t-esc="format_datetime(object.create_date, tz='Africa/Cairo', dt_format='dd/MM/yyyy - hh:mm a')"/>
+                                </t>
+                                <t t-else="">غير محدد</t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">مدة الـ SLA:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-esc="object.sla_duration or 'غير محدد'"/>
+                                يوم
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">سبب الشكوى:</td>
+                            <td style="padding: 5px; border: 1px solid #ddd;">
+                                <t t-esc="object.complaint_reason_id.name or 'غير محدد'"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">نوع الشكوى:</td>
+                            <td style="padding: 5px; font-weight: bold;">طلب إكرامية</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="background-color: #fff3e0; padding: 15px; border-right: 3px solid #ff6f00; margin: 15px 0; border-radius: 4px;">
+                    <p style="margin: 0 0 10px 0; font-size: 14px; color: #e65100; font-weight: bold;">
+                        📋 الإجراءات المطلوبة:
+                    </p>
+                    <ul style="margin: 5px 0; padding-right: 20px; font-size: 13px; color: #d84315;">
+                        <li style="margin: 5px 0;">التحقيق الفوري مع مسؤول المبيعات</li>
+                        <li style="margin: 5px 0;">التواصل مع العميل والاعتذار الرسمي</li>
+                        <li style="margin: 5px 0;">اتخاذ الإجراءات التأديبية المناسبة</li>
+                        <li style="margin: 5px 0;">إبلاغ إدارة الموارد البشرية بنتائج التحقيق</li>
+                        <li style="margin: 5px 0;">توثيق الحادثة في ملف الموظف</li>
+                    </ul>
+                </div>
+
+                <div style="background-color: #f3e5f5; padding: 12px; border-right: 3px solid #9c27b0; margin: 15px 0; border-radius: 4px;">
+                    <p style="margin: 0; font-size: 13px; color: #6a1b9a;">
+                        <strong>🔒 سرية:</strong>
+                        هذه الشكوى تتطلب معالجة سرية وفورية من قبل الإدارة والموارد البشرية
+                    </p>
+                </div>
+
+                <p style="margin: 20px 0px 10px 0px; padding: 10px; font-size: 15px; font-weight: bold; color: #ffffff; background-color: #c62828; border-radius: 4px; text-align: center;">
+                    🚨 شكوى عاجلة - يتطلب تدخل فوري من الإدارة والموارد البشرية
+                </p>
+
+                <div style="margin: 20px 0px; text-align: center;">
+                    <a href="/web#id={{object.id}}&amp;model=res.complaint&amp;view_type=form"
+                       style="padding: 12px 24px; font-size: 14px; color: #FFFFFF; background-color: #c62828; border: none; border-radius: 4px; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        عرض تفاصيل الشكوى والتحقيق
+                    </a>
+                </div>
+
+                <p style="margin: 20px 0px 0px 0px; padding: 0px; font-size: 13px; color: #666;">
+                    مع خالص التحية والتقدير،
+                    <br/>
+                    <t t-esc="object.create_uid.name or 'نظام إدارة الشكاوى'"/>
+                </p>
+
+                <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;"/>
+
+                <p style="margin: 0px; padding: 0px; font-size: 11px; color: #999; text-align: center;">
+                    هذه رسالة تلقائية من نظام إدارة الشكاوى - شكوى خطيرة تتطلب اهتمام فوري
+                </p>
+            </div>
+        </field>
+        <field name="auto_delete"
+               eval="False"/>
+    </record>
+</odoo>

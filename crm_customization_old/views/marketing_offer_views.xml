@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- =================== MARKETING OFFERS  =================== -->
+    <record id="view_marketing_offers_list" model="ir.ui.view">
+        <field name="name">marketing.offers.list</field>
+        <field name="model">marketing.offers</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+
+            </list>
+        </field>
+    </record>
+
+    <record id="view_marketing_offers_form" model="ir.ui.view">
+        <field name="name">marketing.offers.form</field>
+        <field name="model">marketing.offers</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+
+                        <group>
+                            <field name="name" required="1"/>
+                        </group>
+
+                </sheet>
+                <!-- Attachment preview -->
+                <div class="o_attachment_preview"/>
+                <!-- Chatter -->
+                <chatter reload_on_attachment="True"/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_marketing_offers" model="ir.actions.act_window">
+        <field name="name">Marketing Offers</field>
+        <field name="res_model">marketing.offers</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_marketing_offers"
+              name="Marketing Offers"
+              parent="crm.crm_menu_config"
+              action="action_marketing_offers"
+              sequence="2"/>
+
+
+</odoo>

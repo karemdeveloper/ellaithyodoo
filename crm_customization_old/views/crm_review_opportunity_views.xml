@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- FORM VIEW -->
+    <record id="crm_review_opportunity_form" model="ir.ui.view">
+        <field name="name">crm.review.opportunity.form</field>
+        <field name="model">crm.review.opportunity</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_load_opportunities"
+                            type="object"
+                            string="Load Opportunities"
+                            class="btn-primary"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="branch_id"/>
+                            <field name="date_from"/>
+
+                        </group>
+                        <group>
+                            <field name="salesperson_id"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Salespersons Review">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="salesperson_id"/>
+                                    <field name="opportunity_ids"  widget="many2many_tags" column_invisible="True"/>
+                                    <field name="opportunity_number"/>
+                                    <field name="inactive_hours"/>
+                                </list>
+
+                                <form>
+                                    <group>
+                                        <field name="salesperson_id"/>
+                                        <field name="inactive_hours"/>
+                                    </group>
+                                    <field name="opportunity_ids">
+                                        <list>
+                                            <field name="name"/>
+                                            <field name="stage_id"/>
+                                            <field name="create_date"/>
+                                        </list>
+                                    </field>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="crm_review_opportunity_list" model="ir.ui.view">
+        <field name="name">crm.review.opportunity.list</field>
+        <field name="model">crm.review.opportunity</field>
+        <field name="arch" type="xml">
+            <list>
+
+                <field name="branch_id"/>
+                <field name="salesperson_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ACTION -->
+    <record id="action_crm_review_opportunity" model="ir.actions.act_window">
+        <field name="name">Review Opportunities and InActive Hours</field>
+        <field name="res_model">crm.review.opportunity</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- MENU -->
+    <menuitem id="menu_crm_review_opportunity"
+              name="Review Opportunities and InActive Hours"
+              parent="crm.crm_menu_root"
+              action="action_crm_review_opportunity"
+              sequence="40"/>
+</odoo>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- file: views/create_opportunity_wizard.xml -->
+<odoo>
+    <record id="view_create_opportunity_wizard_form" model="ir.ui.view">
+        <field name="name">opportunity.wizard.form</field>
+        <field name="model">opportunity.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create Opportunity">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="opportunity_type"/>
+                            <field name="service_id" invisible="opportunity_type != 'service'" options="{'no_create': True, 'no_create_edit': True}"/>
+                            <field name="area_id" options="{'no_create': True, 'no_create_edit': True}" required="1"/>
+                            <field name="branch_id" options="{'no_create': True, 'no_create_edit': True}" required="1"/>
+                            <field name="source_id" options="{'no_create': True, 'no_create_edit': True}" required="1"/>
+                            <!--                    <field name="sla_duration" />-->
+                            <field name="marketing_offer"/>
+                            <field name="call_type"/>
+                        </group>
+
+                        <group invisible="opportunity_type in ('used', 'service')">
+                            <separator string="New" colspan="2"/>
+                            <field name="brand_id2" widget="many2many_tags"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   required="opportunity_type not in ('used', 'service')"/>
+                            <field name="sub_brand_id2" widget="many2many_tags"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   domain="[('brand', 'in', brand_id2)]"
+                                   required="opportunity_type not in ('used', 'service')"/>
+                            <field name="hotline_transfer"/>
+
+
+                        </group>
+                        <group invisible="opportunity_type in ('new', 'service')">
+                            <separator string="Used" colspan="2"/>
+
+                            <field name="brand_used_id" widget="many2many_tags"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   required="opportunity_type not in ('new', 'service')"/>
+                            <field name="sub_brand_used_id" widget="many2many_tags"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   domain="[('brand', 'in', brand_used_id)]"
+                                   required="opportunity_type not in ('new', 'service')"/>
+                            <field name="model"/>
+                            <field name="kilometers"/>
+
+                        </group>
+                    </group>
+                    <footer>
+                        <button string="Save/Distribute" type="object" name="action_distribute" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_create_opportunity_wizard" model="ir.actions.act_window">
+        <field name="name">Create Opportunity</field>
+        <field name="res_model">opportunity.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

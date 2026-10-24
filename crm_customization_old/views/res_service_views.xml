@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Service List View -->
+    <record id="view_res_service_list" model="ir.ui.view">
+        <field name="name">res.service.list</field>
+        <field name="model">res.service</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Service Form View -->
+    <record id="view_res_service_form" model="ir.ui.view">
+        <field name="name">res.service.form</field>
+        <field name="model">res.service</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                    </group>
+                </sheet>
+                <!-- Attachment preview -->
+                <div class="o_attachment_preview"/>
+                <!-- Chatter -->
+                <chatter reload_on_attachment="True"/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_res_service" model="ir.actions.act_window">
+        <field name="name">Services</field>
+        <field name="res_model">res.service</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menu under Configuration -->
+    <menuitem id="menu_res_service"
+              name="Services"
+              parent="crm.crm_menu_config"
+              action="action_res_service"
+              sequence="15"/>
+</odoo>

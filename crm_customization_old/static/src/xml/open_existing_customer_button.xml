@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="crm_customization.OpenExistingCustomerButton" owl="1">
+        <div class="o_field_widget">
+            <div t-if="isVisible" class="alert alert-warning d-flex align-items-center" style="margin: 0; padding: 8px 12px;">
+                <i class="fa fa-exclamation-triangle me-2" style="font-size: 18px;"/>
+                <span class="flex-grow-1">
+                    Customer exists: <strong t-esc="customerName"/>
+                </span>
+                <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    t-on-click.prevent.stop="onClick"
+                    title="Open existing customer and discard current form">
+                    <i class="fa fa-external-link me-1"/> Open Customer
+                </button>
+            </div>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Lost Review Feedback Wizard Form View -->
+    <record id="view_lost_review_feedback_wizard_form" model="ir.ui.view">
+        <field name="name">lost.review.feedback.wizard.form</field>
+        <field name="model">lost.review.feedback.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create Feedback">
+                <sheet>
+                    <group>
+                        <field name="review_id" invisible="1"/>
+                        <field name="line_ids" invisible="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Feedback Lines">
+                            <field name="feedback_line_ids">
+                                <list editable="bottom" decoration-danger="feedback=='not_valid'" create="0" delete="0">
+                                    <field name="lead_id" readonly="1" force_save="1"/>
+                                    <field name="review_line_id" column_invisible="1"/>
+                                    <field name="salesperson_id" readonly="1"/>
+                                    <field name="phone_primary" readonly="1"/>
+                                    <field name="feedback" required="1"/>
+                                    <field name="description" invisible="feedback == 'valid'" placeholder="Describe why this is not valid..."/>
+                                </list>
+                                <form string="Feedback Line">
+                                    <group>
+                                        <group>
+                                            <field name="lead_id" readonly="1"/>
+                                            <field name="salesperson_id" readonly="1"/>
+                                            <field name="phone_primary" readonly="1"/>
+                                        </group>
+                                        <group>
+                                            <field name="feedback" required="1"/>
+                                        </group>
+                                    </group>
+                                    <group>
+                                        <field name="description" 
+                                               invisible="feedback == 'valid'" 
+                                               required="feedback == 'not_valid'"
+                                               placeholder="Please describe why this feedback is not valid..."/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button name="action_create_feedback" string="Create Feedback" type="object" class="btn-primary"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

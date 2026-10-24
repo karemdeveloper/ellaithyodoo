@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- =================== ACTIVE REASONS =================== -->
+    <record id="view_inactive_reason_list" model="ir.ui.view">
+        <field name="name">inactive.reason.list</field>
+        <field name="model">inactive.reason</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_inactive_reason_form" model="ir.ui.view">
+        <field name="name">inactive.reason.form</field>
+        <field name="model">inactive.reason</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name" required="1"/>
+                    </group>
+                </sheet>
+                 <!-- Attachment preview -->
+                    <div class="o_attachment_preview" />
+                    <!-- Chatter -->
+                    <chatter reload_on_attachment="True"/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_inactive_reason" model="ir.actions.act_window">
+        <field name="name">Inactive Reason</field>
+        <field name="res_model">inactive.reason</field>
+        <field name="view_mode">list,form</field>
+    </record>
+     <menuitem id="menu_inactive_reason"
+              name="Inactive Reason"
+              parent="crm.crm_menu_config"
+              action="action_inactive_reason"
+              sequence="2"/>
+
+
+</odoo>
