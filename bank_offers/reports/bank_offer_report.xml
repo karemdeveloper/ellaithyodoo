@@ -61,4 +61,60 @@
             </t>
         </t>
     </template>
+
+    <record id="action_report_bank_offer_result" model="ir.actions.report">
+        <field name="name">Bank Offer</field>
+        <field name="model">bank.offer.assessment.result</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">bank_offers.report_bank_offer_result</field>
+        <field name="report_file">bank_offers.report_bank_offer_result</field>
+        <field name="print_report_name">'Bank Offer - %s' % (object.bank_id.name or '')</field>
+    </record>
+
+    <template id="report_bank_offer_result">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="line">
+                <t t-call="web.external_layout">
+                    <div class="page" dir="rtl" style="font-family: Arial, sans-serif;">
+                        <h2 class="text-center">عرض تمويل بنكي</h2>
+                        <h3 class="text-center"><span t-field="line.bank_id"/></h3>
+
+                        <table class="table table-sm table-bordered" style="margin-top:20px;">
+                            <tbody>
+                                <tr><td><strong>اسم العميل</strong></td><td><span t-field="line.assessment_id.customer_name"/></td><td><strong>الهاتف</strong></td><td><span t-field="line.assessment_id.phone"/></td></tr>
+                                <tr><td><strong>الدخل الشهري</strong></td><td><span t-field="line.assessment_id.monthly_income"/></td><td><strong>نوع الوظيفة</strong></td><td><span t-field="line.assessment_id.job_type_id"/></td></tr>
+                                <tr><td><strong>العمر</strong></td><td><span t-field="line.assessment_id.age"/></td><td><strong>تاريخ اليوم</strong></td><td><span t-field="line.assessment_id.today_date"/></td></tr>
+                                <tr><td><strong>نوع السيارة</strong></td><td><span t-field="line.assessment_id.vehicle_type"/></td><td><strong>عدد شهور التقسيط</strong></td><td><span t-field="line.assessment_id.term_months"/></td></tr>
+                                <tr><td><strong>سعر السيارة</strong></td><td><span t-field="line.assessment_id.car_price"/></td><td><strong>المقدم</strong></td><td><span t-field="line.assessment_id.down_payment"/></td></tr>
+                                <tr><td><strong>مبلغ التمويل</strong></td><td><span t-field="line.assessment_id.finance_amount"/></td><td><strong>الترتيب</strong></td><td><span t-field="line.rank"/></td></tr>
+                            </tbody>
+                        </table>
+
+                        <table class="table table-sm table-bordered" style="margin-top:20px;">
+                            <tbody>
+                                <tr><td><strong>البنك</strong></td><td><span t-field="line.bank_id"/></td></tr>
+                                <tr><td><strong>البرنامج</strong></td><td><span t-field="line.program_id"/></td></tr>
+                                <tr><td><strong>الفائدة السنوية %</strong></td><td><span t-field="line.annual_interest_rate"/></td></tr>
+                                <tr><td><strong>طريقة الفائدة</strong></td><td><span t-field="line.interest_method"/></td></tr>
+                                <tr><td><strong>القسط الشهري</strong></td><td><span t-field="line.monthly_installment"/></td></tr>
+                                <tr><td><strong>نسبة القسط إلى الدخل %</strong></td><td><span t-field="line.installment_income_pct"/></td></tr>
+                                <tr><td><strong>أيام الموافقة</strong></td><td><span t-field="line.approval_days"/></td></tr>
+                                <tr><td><strong>المصاريف الإدارية</strong></td><td><span t-field="line.admin_fee"/></td></tr>
+                                <tr><td><strong>مصاريف الحظر الإلكتروني</strong></td><td><span t-field="line.sale_ban_fee"/></td></tr>
+                                <tr><td><strong>قيمة التأمين السنوي</strong></td><td><span t-field="line.annual_insurance_amount"/></td></tr>
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top:30px; font-size:13px; line-height:1.8;">
+                            <p><strong>الشروط والأحكام:</strong></p>
+                            <p>• تم احتساب قيمة الفائدة والقسط الشهري بشكل مبدئي لحين صدور الموافقة البنكية بالقيمة النهائية والصحيحة.</p>
+                            <p>• السعر النهائي للسيارة يُحدد عند الاستلام.</p>
+                            <p>• تطبق الشروط والأحكام.</p>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
 </odoo>

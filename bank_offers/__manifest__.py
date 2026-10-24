@@ -1,6 +1,6 @@
 {
     "name": "Bank Offers",
-    "version": "18.0.1.4.0",
+    "version": "18.0.1.5.0",
     "summary": "Python custom addon for bank financing programs, pre-assessment, installment calculation and bank recommendations",
     "description": """
 Bank Offers for Odoo 18

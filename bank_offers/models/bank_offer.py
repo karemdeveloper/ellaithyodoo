@@ -511,9 +511,10 @@ class BankOfferAssessment(models.Model):
                 })
             rec.state = "calculated"
 
-        # Always open the complete assessment summary, never a single result line.
-        self.ensure_one()
-        return self.action_open_result_popup()
+        # Calculate only. Stay on the assessment form and refresh the screen.
+        # The user can open any bank offer row to view/print that specific offer,
+        # or use View Results / Print for the full comparison.
+        return {"type": "ir.actions.client", "tag": "reload"}
 
     def action_open_result_popup(self):
         self.ensure_one()
@@ -569,3 +570,7 @@ class BankOfferAssessmentResult(models.Model):
     annual_insurance_amount = fields.Monetary(readonly=True)
     admin_fee = fields.Monetary(readonly=True)
     sale_ban_fee = fields.Monetary(string="مصاريف الحظر الإلكتروني", readonly=True)
+
+    def action_print_offer(self):
+        self.ensure_one()
+        return self.env.ref("bank_offers.action_report_bank_offer_result").report_action(self)
